@@ -3,7 +3,7 @@
 - **Name:** Enes
 - **What to call them:** Enes
 - **Pronouns:** 
-- **Timezone:** 
+- **Timezone:** Europe/Belgrade
 - **Notes:** Preferira razgovor na srpskom; želi ozbiljan ton.
 
 ## Context
