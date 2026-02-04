@@ -6,6 +6,12 @@
 - **Timezone:** Europe/Belgrade
 - **Notes:** Preferira razgovor na srpskom; želi ozbiljan ton.
 
+## Dev preferences
+- Backend: FastAPI
+- Frontend: React + TypeScript
+- State/data: TanStack (Query/Table/etc.)
+- DB: PostgreSQL (when needed)
+
 ## Context
 
 *(dopunićemo vremenom)*
