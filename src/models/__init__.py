@@ -1,1 +1,7 @@
 # Import models here so Alembic can discover them via metadata
+from .tenant import Tenant  # noqa: F401
+from .user import User  # noqa: F401
+from .application import Application  # noqa: F401
+from .scoring_result import ScoringResult  # noqa: F401
+from .analyst_queue import AnalystQueue  # noqa: F401
+from .decision import Decision  # noqa: F401

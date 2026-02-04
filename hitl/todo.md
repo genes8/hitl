@@ -80,10 +80,10 @@ Tasks:
 - [x] Initialize Alembic migration framework
 - [x] Create migration: 001_create_tenants.py (included in 001_create_tenants_users)
 - [x] Create migration: 002_create_users.py (included in 001_create_tenants_users)
-- [ ] Create migration: 003_create_applications.py
-- [ ] Create migration: 004_create_scoring_results.py
-- [ ] Create migration: 005_create_analyst_queues.py
-- [ ] Create migration: 006_create_decisions.py
+- [x] Create migration: 003_create_applications.py (in 002_create_core_tables)
+- [x] Create migration: 004_create_scoring_results.py (in 002_create_core_tables)
+- [x] Create migration: 005_create_analyst_queues.py (in 002_create_core_tables)
+- [x] Create migration: 006_create_decisions.py (in 002_create_core_tables)
 - [ ] Create migration: 007_create_decision_thresholds.py
 - [ ] Create migration: 008_create_audit_logs.py
 - [ ] Create migration: 009_create_model_registry.py
