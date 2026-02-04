@@ -77,9 +77,9 @@ Estimated Hours: 24
 Can be parallelized: No
 
 Tasks:
-- [ ] Initialize Alembic migration framework
-- [ ] Create migration: 001_create_tenants.py
-- [ ] Create migration: 002_create_users.py
+- [x] Initialize Alembic migration framework
+- [x] Create migration: 001_create_tenants.py (included in 001_create_tenants_users)
+- [x] Create migration: 002_create_users.py (included in 001_create_tenants_users)
 - [ ] Create migration: 003_create_applications.py
 - [ ] Create migration: 004_create_scoring_results.py
 - [ ] Create migration: 005_create_analyst_queues.py
