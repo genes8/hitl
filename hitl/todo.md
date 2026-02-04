@@ -32,7 +32,7 @@ Estimated Hours: 16
 Can be parallelized: No
 
 Tasks:
-- [ ] Create project directory structure:
+- [x] Create project directory structure:
 
   ```text
   /
@@ -49,15 +49,15 @@ Tasks:
   └── .env.example
   ```
 
-- [ ] Write base Dockerfile for backend (Python 3.11, FastAPI)
-- [ ] Write Dockerfile for ML service (Python 3.11, scikit-learn, XGBoost)
-- [ ] Write Dockerfile for frontend (Node 20, multi-stage build)
+- [x] Write base Dockerfile for backend (Python 3.11, FastAPI)
+- [x] Write Dockerfile for ML service (Python 3.11, scikit-learn, XGBoost) (placeholder)
+- [x] Write Dockerfile for frontend (Node 20, multi-stage build) (placeholder)
 - [ ] Create docker-compose.yml with services: postgres, redis, api, ml-service, worker, scheduler, frontend, traefik, prometheus, grafana
 - [ ] Configure PostgreSQL with health checks
 - [ ] Configure Redis with persistence
 - [ ] Set up Traefik reverse proxy with auto-SSL
-- [ ] Create .env.example with all environment variables
-- [ ] Create docker-compose.override.yml for dev (volume mounts, hot reload)
+- [x] Create .env.example with all environment variables (initial)
+- [x] Create docker-compose.override.yml for dev (volume mounts, hot reload)
 - [ ] Test: docker-compose up starts all services
 - [ ] Test: All health checks pass
 - [ ] Document Docker setup in README.md
@@ -119,7 +119,7 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-1.1.2)
 
 Tasks:
-- [ ] Initialize project with Poetry (pyproject.toml)
+- [x] Initialize project with Poetry (pyproject.toml) (minimal pyproject scaffold)
 - [ ] Create src/ directory structure:
 
   ```text
@@ -148,12 +148,12 @@ Tasks:
 - [ ] Create base CRUD class with generic methods
 - [ ] Set up structured logging with request context
 - [ ] Configure CORS middleware (configurable origins)
-- [ ] Create health check endpoint: GET /health
+- [x] Create health check endpoint: GET /health
 - [ ] Create global exception handlers (400, 401, 403, 404, 500)
 - [ ] Create request ID middleware
 - [ ] Configure OpenAPI documentation (/docs, /redoc)
 - [ ] Write pytest configuration (conftest.py)
-- [ ] Write first test: test_health_check
+- [x] Write first test: test_health_check
 - [ ] Test: Server starts without errors
 - [ ] Test: /health returns 200
 - [ ] Test: /docs accessible
