@@ -19,3 +19,4 @@ Run inside the api container:
 ```bash
 docker compose run --rm api alembic upgrade head
 ```
+
