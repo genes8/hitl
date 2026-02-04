@@ -3,6 +3,8 @@
 ## Coding workflow (always)
 - **PR-only**: Coding agent never pushes to main directly.
 - Bratić always reminds Enes to review + merge PRs.
+- **Changelog discipline**: every Coding change must update `hitl/changelog.md` (or `<repo>/changelog.md`) with what was done.
+- **TODO hygiene**: after each Coding change, mark completed items in the relevant `todo.md`.
 
 ## How to message tasks (Telegram)
 Use one of:
