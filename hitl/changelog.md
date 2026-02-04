@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- CI: added GitHub Actions workflow to run Alembic migrations + pytest on PRs and main.
+
 - DB: added decision_thresholds + audit_logs + updated_at trigger function applied to core tables.
 
 - DB: added core tables migration (applications, scoring_results, analyst_queues, decisions) + models scaffold.
