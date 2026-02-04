@@ -1175,3 +1175,743 @@ Tasks:
 
 Definition of Done:
 - Data fetching layer complete
+
+- Approve: Show approved terms summary
+- Approve with conditions: Show ConditionsBuilder
+- Decline: Show reasoning field (required)
+- Request docs: Show document checklist
+- [ ] Create reasoning textarea:
+  - Required for all decisions
+  - Character count
+  - Minimum 20 characters
+- [ ] Create reasoning category dropdown
+- [ ] Create template selector (pre-fill common responses)
+- [ ] Implement form validation
+- [ ] Handle submission (useSubmitDecision mutation)
+- [ ] Show loading state during submission
+- [ ] Test: All options work
+- [ ] Test: Validation enforced
+- [ ] Test: Submission works
+
+Definition of Done:
+- Decision panel fully functional
+
+-----
+
+### TODO-5.3.2: Conditions Builder
+Assignee: Frontend Engineer B
+Priority: P0
+Dependencies: TODO-5.3.1
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Create ConditionsBuilder component
+- [ ] Create condition type selector (dropdown):
+  - Documentation required
+  - Collateral required
+  - Guarantor required
+  - Amount adjustment
+  - Term adjustment
+  - Custom
+- [ ] For amount adjustment:
+  - New amount input
+  - Show difference from requested
+  - Recalculate monthly payment
+- [ ] For term adjustment:
+  - New term input
+  - Recalculate monthly payment
+- [ ] For documentation:
+  - Document checklist (bank statements, pay stubs, etc.)
+  - Due date picker
+- [ ] Implement add/remove conditions
+- [ ] Show adjusted terms preview (if modified)
+- [ ] Test: Conditions addable/removable
+- [ ] Test: Preview calculates correctly
+
+Definition of Done:
+- Conditions builder complete
+
+-----
+
+### TODO-5.3.3: Override Flow
+Assignee: Frontend Engineer B
+Priority: P0
+Dependencies: TODO-5.3.2
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Create override detection logic:
+  - If score >= auto_approve_min AND decision = decline → override
+  - If score <= auto_decline_max AND decision = approve → override
+- [ ] Show override checkbox when applicable
+- [ ] Create OverrideModal component:
+  - Warning message explaining override implications
+  - Justification textarea (required, min 50 chars)
+  - Confirmation checkbox
+  - Submit button
+- [ ] Show pending approval status after override submission
+- [ ] Test: Override detected correctly
+- [ ] Test: Modal flow works
+- [ ] Test: Pending status shown
+
+Definition of Done:
+- Override workflow complete
+
+-----
+
+## Sprint 5.4: Workbench Polish (Week 13)
+
+### TODO-5.4.1: Keyboard Shortcuts
+Assignee: Frontend Engineer B
+Priority: P2
+Dependencies: TODO-5.3.3
+Estimated Hours: 8
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Define shortcut mappings
+- [ ] Implement keyboard event listener
+- [ ] Shortcuts:
+  - Ctrl+Shift+A: Select Approve
+  - Ctrl+Shift+D: Select Decline
+  - Ctrl+Enter: Submit decision
+  - Ctrl+N: Next case
+  - Ctrl+P: Previous case
+  - Escape: Cancel/close modals
+- [ ] Create shortcuts help modal (Ctrl+?)
+- [ ] Test: Shortcuts work
+- [ ] Test: No conflicts with browser shortcuts
+
+Definition of Done:
+- Keyboard shortcuts functional
+
+-----
+
+### TODO-5.4.2: Quick Actions Panel
+Assignee: Frontend Engineer B
+Priority: P1
+Dependencies: TODO-5.4.1
+Estimated Hours: 8
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Create QuickActions component
+- [ ] Implement “Release to Queue” button:
+  - Confirmation dialog
+  - Call release endpoint
+  - Navigate back to queue
+- [ ] Implement “Request Help” button:
+  - Opens chat/comment modal
+  - Notifies senior analyst
+- [ ] Implement “Flag for Review” button:
+  - Marks case for special attention
+  - Add flag reason
+- [ ] Test: Actions work correctly
+- [ ] Test: Confirmations shown
+
+Definition of Done:
+- Quick actions functional
+
+-----
+
+### TODO-5.4.3: Workbench State Persistence
+Assignee: Frontend Engineer B
+Priority: P2
+Dependencies: TODO-5.4.2
+Estimated Hours: 8
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Save form state to localStorage on change
+- [ ] Restore state on page reload
+- [ ] Clear state on successful submission
+- [ ] Handle stale state (case changed/submitted elsewhere)
+- [ ] Show recovery prompt if draft exists
+- [ ] Test: State survives reload
+- [ ] Test: Recovery works
+- [ ] Test: Stale state handled
+
+Definition of Done:
+- State persistence working
+
+-----
+
+# PHASE 6: Analytics & Monitoring (3 weeks) - PARALLEL with Phase 5
+
+## Sprint 6.1: Analytics Dashboard (Weeks 10-11)
+
+### TODO-6.1.1: Dashboard Page
+Assignee: Frontend Engineer (separate)
+Priority: P0
+Dependencies: Phase 4 Complete
+Estimated Hours: 20
+Can be parallelized: Yes (with Phase 5)
+
+Tasks:
+- [ ] Create / (dashboard) route
+- [ ] Create dashboard grid layout
+- [ ] Create date range selector (last 7 days, 30 days, custom)
+- [ ] Fetch data with useAnalytics hook
+- [ ] Create MetricCard component:
+  - Large number
+  - Label
+  - Trend indicator (↑ up, ↓ down)
+  - Comparison to previous period
+- [ ] Display metrics:
+  - Total Applications
+  - Auto-Decision Rate
+  - Approval Rate
+  - Average Review Time
+  - SLA Compliance Rate
+- [ ] Handle loading state
+- [ ] Test: Metrics display correctly
+- [ ] Test: Date range works
+
+Definition of Done:
+- Dashboard with key metrics
+
+-----
+
+### TODO-6.1.2: Decision Charts
+Assignee: Frontend Engineer (separate)
+Priority: P0
+Dependencies: TODO-6.1.1
+Estimated Hours: 16
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Create TrendChart component (line chart):
+  - Applications over time
+  - Decisions over time
+  - Configurable granularity
+- [ ] Create DistributionChart component (pie/donut):
+  - Decision type breakdown
+  - Score distribution histogram
+- [ ] Add chart interactivity:
+  - Tooltips on hover
+  - Click to drill down
+- [ ] Implement responsive sizing
+- [ ] Test: Charts render correctly
+- [ ] Test: Responsive
+
+Definition of Done:
+- Charts implemented
+
+-----
+
+### TODO-6.1.3: Performance Tables
+Assignee: Frontend Engineer (separate)
+Priority: P1
+Dependencies: TODO-6.1.2
+Estimated Hours: 12
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Create AnalystPerformanceTable:
+  - Columns: Analyst, Decisions, Avg Time, Override Rate, Approval Rate
+  - Sortable
+- [ ] Create ModelPerformanceTable:
+  - Columns: Date, Scores Generated, Avg Score, Routing Distribution
+  - Sortable
+- [ ] Add comparison views (week-over-week)
+- [ ] Test: Tables populated correctly
+- [ ] Test: Sorting works
+
+Definition of Done:
+- Performance tables complete
+
+-----
+
+## Sprint 6.2: Backend Analytics (Week 11)
+
+### TODO-6.2.1: Analytics Endpoints
+Assignee: Backend Engineer
+Priority: P0
+Dependencies: Phase 2 Complete
+Estimated Hours: 20
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Create GET /analytics/dashboard endpoint
+- [ ] Implement summary calculations:
+
+  ```sql
+  SELECT
+    COUNT(*) as total,
+    SUM(CASE WHEN decision_type LIKE 'auto_%' THEN 1 ELSE 0 END)::float / COUNT(*) as auto_rate,
+    SUM(CASE WHEN decision_outcome = 'approved' THEN 1 ELSE 0 END)::float / COUNT(*) as approval_rate,
+    AVG(review_time_seconds) as avg_review_time
+  FROM decisions
+  WHERE created_at BETWEEN :from_date AND :to_date
+  ```
+
+- [ ] Implement decision breakdown by type
+- [ ] Implement trend data aggregation (by day/week)
+- [ ] Implement queue metrics
+- [ ] Create GET /analytics/analyst-performance
+- [ ] Create GET /analytics/model-performance
+- [ ] Create GET /analytics/cohort-analysis
+- [ ] Add caching for expensive queries (Redis, 5 min TTL)
+- [ ] Test: Endpoints return correct data
+- [ ] Test: Response time < 500ms
+
+Definition of Done:
+- Analytics API complete
+
+-----
+
+### TODO-6.2.2: Export Functionality
+Assignee: Backend Engineer
+Priority: P1
+Dependencies: TODO-6.2.1
+Estimated Hours: 12
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Create POST /analytics/export endpoint
+- [ ] Implement CSV export
+- [ ] Implement Excel export (using openpyxl)
+- [ ] For large datasets (>10k rows):
+  - Queue as background task
+  - Return export_id
+  - Poll GET /analytics/export/{id}/status
+- [ ] Create GET /analytics/export/{id}/download
+- [ ] Test: Small exports work
+- [ ] Test: Large exports async
+
+Definition of Done:
+- Export functionality working
+
+-----
+
+## Sprint 6.3: Monitoring Infrastructure (Week 12)
+
+### TODO-6.3.1: Prometheus Metrics
+Assignee: DevOps Engineer
+Priority: P0
+Dependencies: TODO-2.4.1
+Estimated Hours: 16
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Configure Prometheus scraping (prometheus.yml)
+- [ ] Add FastAPI prometheus middleware
+- [ ] Create custom metrics:
+  - applications_total (Counter, labels: status)
+  - decisions_total (Counter, labels: type, outcome)
+  - scoring_duration_seconds (Histogram)
+  - queue_size (Gauge)
+  - queue_wait_time_seconds (Histogram)
+  - model_prediction_duration_seconds (Histogram)
+  - sla_breaches_total (Counter)
+- [ ] Configure alerting rules:
+  - High error rate (> 1%)
+  - High latency (p99 > 1s)
+  - Queue growing (> 100 pending)
+  - SLA breaches (> 5/hour)
+- [ ] Test: Metrics collected
+- [ ] Test: Alerts trigger correctly
+
+Definition of Done:
+- Prometheus monitoring operational
+
+-----
+
+### TODO-6.3.2: Grafana Dashboards
+Assignee: DevOps Engineer
+Priority: P0
+Dependencies: TODO-6.3.1
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Create Operations Dashboard:
+  - Request rate and latency panels
+  - Error rate panel
+  - Database connections panel
+  - Redis metrics panel
+- [ ] Create Business Dashboard:
+  - Applications funnel
+  - Decision metrics
+  - Queue health
+  - SLA compliance
+- [ ] Create ML Dashboard:
+  - Scoring latency
+  - Score distribution
+  - Drift indicators
+- [ ] Set up alerting to Slack/email
+- [ ] Document dashboards
+- [ ] Test: Dashboards visualize correctly
+- [ ] Test: Alerting works
+
+Definition of Done:
+- Grafana dashboards deployed
+
+-----
+
+### TODO-6.3.3: Logging Setup
+Assignee: DevOps Engineer
+Priority: P1
+Dependencies: TODO-6.3.1
+Estimated Hours: 12
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Configure Loki for log aggregation
+- [ ] Configure Promtail for log shipping
+- [ ] Set up log parsing rules (JSON logs)
+- [ ] Create Loki data source in Grafana
+- [ ] Create log query panels in dashboards
+- [ ] Implement log retention policy (30 days)
+- [ ] Test: Logs aggregated
+- [ ] Test: Searchable in Grafana
+
+Definition of Done:
+- Centralized logging operational
+
+-----
+
+# PHASE 7: Integration & Testing (3 weeks)
+
+## Sprint 7.1: Integration Testing (Week 14)
+
+### TODO-7.1.1: API Integration Tests
+Assignee: QA Engineer
+Priority: P0
+Dependencies: Phases 2-3 Complete
+Estimated Hours: 24
+Can be parallelized: No
+
+Tasks:
+- [ ] Set up test database (Docker, isolated)
+- [ ] Create test fixtures (factory_boy)
+- [ ] Write auth flow tests:
+  - Login success/failure
+  - Token refresh
+  - Token expiration
+- [ ] Write application CRUD tests
+- [ ] Write scoring integration tests (mock ML service)
+- [ ] Write queue workflow tests (assign, start, release)
+- [ ] Write decision flow tests (all types)
+- [ ] Write override workflow tests
+- [ ] Write analytics endpoint tests
+- [ ] Configure CI to run tests (GitHub Actions)
+- [ ] Test: All integration tests pass
+- [ ] Test: Coverage > 80%
+
+Definition of Done:
+- Comprehensive API tests
+
+-----
+
+### TODO-7.1.2: E2E Test Suite
+Assignee: QA Engineer
+Priority: P0
+Dependencies: Phases 4-5 Complete
+Estimated Hours: 24
+Can be parallelized: No
+
+Tasks:
+- [ ] Set up Playwright
+- [ ] Configure test environment (docker-compose.test.yml)
+- [ ] Write test: Login flow
+- [ ] Write test: Application list (filter, paginate)
+- [ ] Write test: Application detail view
+- [ ] Write test: Queue workflow (pick case)
+- [ ] Write test: Workbench full flow (load, review, decide)
+- [ ] Write test: Decision submission (approve)
+- [ ] Write test: Decision submission (decline)
+- [ ] Write test: Override flow
+- [ ] Write test: Dashboard metrics
+- [ ] Configure CI for E2E (headless)
+- [ ] Test: All E2E tests pass
+
+Definition of Done:
+- E2E tests covering critical paths
+
+-----
+
+## Sprint 7.2: Performance Testing (Week 15)
+
+### TODO-7.2.1: Load Testing
+Assignee: QA Engineer
+Priority: P0
+Dependencies: TODO-7.1.1
+Estimated Hours: 20
+Can be parallelized: No
+
+Tasks:
+- [ ] Set up k6 or Locust
+- [ ] Create load test scenarios:
+  - Application submission: 100 req/s sustained
+  - Scoring: 50 req/s sustained
+  - Queue listing: 200 req/s sustained
+  - Decision submission: 30 req/s sustained
+- [ ] Run baseline tests (current performance)
+- [ ] Identify bottlenecks:
+  - Database queries
+  - ML service
+  - Redis
+- [ ] Document performance baseline
+- [ ] Create performance report
+
+Definition of Done:
+- Performance baseline established
+
+-----
+
+### TODO-7.2.2: Performance Optimization
+Assignee: Backend Engineer
+Priority: P1
+Dependencies: TODO-7.2.1
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Optimize slow queries (EXPLAIN ANALYZE)
+- [ ] Add missing indexes
+- [ ] Implement query result caching (Redis)
+- [ ] Fix N+1 queries (use joinedload)
+- [ ] Tune database connection pool
+- [ ] Optimize ML service batching
+- [ ] Re-run load tests
+- [ ] Document optimizations made
+
+Definition of Done:
+- Performance targets met
+
+-----
+
+## Sprint 7.3: Security & Documentation (Week 16)
+
+### TODO-7.3.1: Security Audit
+Assignee: Security Engineer
+Priority: P0
+Dependencies: All Features Complete
+Estimated Hours: 24
+Can be parallelized: No
+
+Tasks:
+- [ ] Run OWASP ZAP scan
+- [ ] Review authentication implementation
+- [ ] Review authorization implementation
+- [ ] Test for SQL injection
+- [ ] Test for XSS vulnerabilities
+- [ ] Review secrets management
+- [ ] Review API rate limiting
+- [ ] Check CORS configuration
+- [ ] Review logging (ensure no sensitive data)
+- [ ] Create security report
+- [ ] Fix critical findings
+
+Definition of Done:
+- No critical vulnerabilities
+
+-----
+
+### TODO-7.3.2: Compliance Review
+Assignee: Compliance Officer / Backend Engineer
+Priority: P0
+Dependencies: TODO-7.3.1
+Estimated Hours: 16
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Review GDPR compliance:
+  - Right to explanation (SHAP explanations)
+  - Data access requests (export endpoint)
+  - Data deletion (implemented?)
+- [ ] Review audit trail completeness
+- [ ] Review data retention implementation
+- [ ] Review PII handling
+- [ ] Create compliance documentation
+- [ ] Sign off on compliance
+
+Definition of Done:
+- GDPR requirements verified
+
+-----
+
+### TODO-7.3.3: Documentation
+Assignee: Technical Writer
+Priority: P1
+Dependencies: All Features Complete
+Estimated Hours: 24
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Write API documentation (OpenAPI + guides)
+- [ ] Write deployment guide
+- [ ] Write operations runbook
+- [ ] Write analyst user guide
+- [ ] Write admin user guide
+- [ ] Create architecture diagrams
+- [ ] Document configuration options
+- [ ] Create troubleshooting guide
+- [ ] Review and edit all docs
+
+Definition of Done:
+- Documentation complete
+
+-----
+
+# PHASE 8: Production Readiness (2 weeks)
+
+## Sprint 8.1: Infrastructure (Week 17)
+
+### TODO-8.1.1: Production Environment
+Assignee: DevOps Engineer
+Priority: P0
+Dependencies: Phase 7 Complete
+Estimated Hours: 24
+Can be parallelized: No
+
+Tasks:
+- [ ] Provision production servers (cloud or on-prem)
+- [ ] Set up PostgreSQL with replication (primary + replica)
+- [ ] Set up Redis cluster (or managed Redis)
+- [ ] Configure SSL certificates (Let’s Encrypt or purchased)
+- [ ] Set up domain and DNS
+- [ ] Configure firewall rules
+- [ ] Set up backup schedule:
+  - Database: Daily full, hourly incremental
+  - Retention: 30 days
+- [ ] Configure log shipping to central logging
+- [ ] Test failover scenarios
+- [ ] Document infrastructure
+
+Definition of Done:
+- Production infrastructure ready
+
+-----
+
+### TODO-8.1.2: CI/CD Pipeline
+Assignee: DevOps Engineer
+Priority: P0
+Dependencies: TODO-8.1.1
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Configure GitHub Actions (or GitLab CI)
+- [ ] Create build pipeline:
+  - Build Docker images
+  - Run linting
+  - Run unit tests
+- [ ] Create test pipeline:
+  - Run integration tests
+  - Run E2E tests
+- [ ] Create staging deployment pipeline:
+  - Deploy to staging
+  - Run smoke tests
+- [ ] Create production deployment pipeline:
+  - Require manual approval
+  - Blue-green deployment
+  - Health check verification
+- [ ] Implement rollback capability
+- [ ] Test full pipeline
+- [ ] Document CI/CD
+
+Definition of Done:
+- CI/CD pipeline operational
+
+-----
+
+## Sprint 8.2: Go-Live (Week 18)
+
+### TODO-8.2.1: Staging Validation
+Assignee: QA Engineer
+Priority: P0
+Dependencies: TODO-8.1.2
+Estimated Hours: 16
+Can be parallelized: No
+
+Tasks:
+- [ ] Deploy to staging environment
+- [ ] Run full E2E test suite
+- [ ] Perform UAT with stakeholders
+- [ ] Validate all integrations
+- [ ] Test monitoring and alerting
+- [ ] Performance test on staging
+- [ ] Sign off on staging
+
+Definition of Done:
+- Staging validated
+
+-----
+
+### TODO-8.2.2: Production Deployment
+Assignee: DevOps Engineer
+Priority: P0
+Dependencies: TODO-8.2.1
+Estimated Hours: 12
+Can be parallelized: No
+
+Tasks:
+- [ ] Create deployment checklist
+- [ ] Schedule deployment window
+- [ ] Notify stakeholders
+- [ ] Run database migrations
+- [ ] Deploy backend services
+- [ ] Deploy ML service
+- [ ] Deploy frontend
+- [ ] Verify health checks
+- [ ] Run smoke tests
+- [ ] Monitor for errors (30 min)
+- [ ] Declare go-live
+
+Definition of Done:
+- System live in production
+
+-----
+
+### TODO-8.2.3: Post-Launch Support
+Assignee: All Engineers
+Priority: P0
+Dependencies: TODO-8.2.2
+Estimated Hours: 40 (1 week)
+Can be parallelized: Yes
+
+Tasks:
+- [ ] Monitor system health 24/7 (first week)
+- [ ] Watch for error spikes
+- [ ] Track performance metrics
+- [ ] Respond to incidents
+- [ ] Collect user feedback
+- [ ] Create bug fixes as needed
+- [ ] Document lessons learned
+- [ ] Plan iteration 2 improvements
+
+Definition of Done:
+- System stable for 1 week
+
+-----
+
+## Parallelization Summary
+
+### Can run in parallel:
+- Phase 3 (ML Pipeline) + Phase 2 (Core Backend)
+- Phase 4 (Frontend Core) + Phases 2-3
+- Phase 6 (Analytics) + Phase 5 (Workbench)
+- Within phases, marked TODOs can parallelize
+
+### Must be sequential:
+- Phase 1 must complete before Phase 2
+- Phase 4 must complete before Phase 5
+- Phase 7 must complete before Phase 8
+
+### Recommended team allocation:
+- Backend Engineer A: Phase 1-2 (Foundation, Core Backend)
+- Backend Engineer B: Phase 2.3-2.4 (Decisions, Workers)
+- ML Engineer: Phase 3 (ML Pipeline) - can start Week 5
+- Frontend Engineer A: Phase 4-5 (Core UI, Workbench)
+- Frontend Engineer B: Phase 5.3-5.4 (Decision Panel)
+- DevOps Engineer: Phase 1.1, 6.3, 8 (Infrastructure)
+- QA Engineer: Phase 7 (Testing)
+
+-----
+
+Total Estimated Hours: ~600 hours
+Total Duration: 16-20 weeks (with parallel execution)
