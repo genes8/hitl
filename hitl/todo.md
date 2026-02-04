@@ -84,15 +84,15 @@ Tasks:
 - [x] Create migration: 004_create_scoring_results.py (in 002_create_core_tables)
 - [x] Create migration: 005_create_analyst_queues.py (in 002_create_core_tables)
 - [x] Create migration: 006_create_decisions.py (in 002_create_core_tables)
-- [ ] Create migration: 007_create_decision_thresholds.py
-- [ ] Create migration: 008_create_audit_logs.py
+- [x] Create migration: 007_create_decision_thresholds.py (in 003_thresholds_audit_and_triggers)
+- [x] Create migration: 008_create_audit_logs.py (in 003_thresholds_audit_and_triggers)
 - [ ] Create migration: 009_create_model_registry.py
 - [ ] Create migration: 010_create_similar_cases.py
 - [ ] Create migration: 011_create_notifications.py
 - [ ] Create migration: 012_create_loan_outcomes.py
 - [ ] Create all indexes as specified in PRD
-- [ ] Create trigger: update_updated_at_column()
-- [ ] Apply trigger to all tables with updated_at
+- [x] Create trigger: update_updated_at_column()
+- [x] Apply trigger to all tables with updated_at (tenants/users/applications/analyst_queues/decision_thresholds)
 - [ ] Create function: sync_application_status()
 - [ ] Create function: calculate_queue_priority()
 - [ ] Create function: get_active_threshold()
