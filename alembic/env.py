@@ -16,7 +16,7 @@ if config.config_file_name is not None:
 
 # Import metadata
 from src.models.base import Base  # noqa: E402
-from src.models import tenant, user  # noqa: F401,E402  (register models)
+import src.models  # noqa: F401,E402 (register models)
 
 target_metadata = Base.metadata
 
