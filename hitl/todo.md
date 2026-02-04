@@ -1795,7 +1795,7 @@ Estimated Hours: 16
 Can be parallelized: No
 
 Tasks:
-- [ ] Configure GitHub Actions (or GitLab CI)
+- [x] Configure GitHub Actions (or GitLab CI) (basic CI: migrations + pytest)
 - [ ] Create build pipeline:
   - Build Docker images
   - Run linting
