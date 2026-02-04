@@ -1,5 +1,10 @@
 # HITL Credit Approval System - Development Phases & TODOs
 
+## Project meta (completed)
+- [x] Added initial documentation: `hitl/prd.md` (PRD)
+- [x] Added initial execution plan: `hitl/todo.md` (phases & TODOs)
+
+
 This document contains all development tasks organized by phase, ready for engineer handoff.
 
 -----
