@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: added decision_thresholds + audit_logs + updated_at trigger function applied to core tables.
+
 - DB: added core tables migration (applications, scoring_results, analyst_queues, decisions) + models scaffold.
 
 - DB: initialized Alembic + first migration for tenants/users.

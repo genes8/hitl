@@ -5,3 +5,5 @@ from .application import Application  # noqa: F401
 from .scoring_result import ScoringResult  # noqa: F401
 from .analyst_queue import AnalystQueue  # noqa: F401
 from .decision import Decision  # noqa: F401
+from .decision_threshold import DecisionThreshold  # noqa: F401
+from .audit_log import AuditLog  # noqa: F401
