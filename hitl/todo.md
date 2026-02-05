@@ -94,8 +94,8 @@ Tasks:
 - [x] Create trigger: update_updated_at_column()
 - [x] Apply trigger to all tables with updated_at (tenants/users/applications/analyst_queues/decision_thresholds)
 - [ ] Create function: sync_application_status()
-- [ ] Create function: calculate_queue_priority()
-- [ ] Create function: get_active_threshold()
+- [x] Create function: calculate_queue_priority()
+- [x] Create function: get_active_threshold()
 - [ ] Create view: v_daily_decision_summary
 - [ ] Create view: v_analyst_performance
 - [ ] Create view: v_queue_metrics

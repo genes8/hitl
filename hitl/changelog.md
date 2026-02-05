@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: added DB functions calculate_queue_priority() and get_active_threshold().
+
 - DB/CI: update migration 004 down_revision to renamed 003 id.
 
 - DB: fix SQLAlchemy reserved attribute `metadata` in ModelRegistry model (renamed to `meta`).
