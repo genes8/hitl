@@ -1,7 +1,7 @@
 """add model registry, similar cases, notifications, loan outcomes
 
 Revision ID: 004_remaining_tables
-Revises: 003_thresholds_audit_and_triggers
+Revises: 003_thresh_audit_trig
 Create Date: 2026-02-05
 
 """
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 
 
 revision = "004_remaining_tables"
-down_revision = "003_thresholds_audit_and_triggers"
+down_revision = "003_thresh_audit_trig"
 branch_labels = None
 depends_on = None
 
