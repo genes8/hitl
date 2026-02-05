@@ -110,3 +110,68 @@ def test_list_applications_filters_by_status():
     assert data["total"] == 1
     assert len(data["items"]) == 1
     assert data["items"][0]["status"] == "scoring"
+
+
+def test_list_applications_searches_by_applicant_name_and_external_id():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    created_id = _create_application(client, tenant_id=tenant_id, applicant_name="Marko")
+
+    # external_id is auto-generated; fetch it directly for a deterministic search.
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT external_id FROM applications WHERE id=%s", (created_id,))
+            external_id = cur.fetchone()[0]
+        conn.commit()
+
+    r1 = client.get(f"/api/v1/applications?tenant_id={tenant_id}&search=Mark")
+    assert r1.status_code == 200, r1.text
+    assert r1.json()["total"] == 1
+
+    r2 = client.get(f"/api/v1/applications?tenant_id={tenant_id}&search={external_id}")
+    assert r2.status_code == 200, r2.text
+    assert r2.json()["total"] == 1
+
+
+def test_list_applications_sorts_by_amount():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    # Create two apps with different loan_amount.
+    payload_low = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Low"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {
+            "loan_amount": 1000,
+            "estimated_payment": 50,
+        },
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    payload_high = {
+        **payload_low,
+        "applicant_data": {"name": "High"},
+        "loan_request": {"loan_amount": 9999, "estimated_payment": 300},
+    }
+
+    r_low = client.post("/api/v1/applications", json=payload_low)
+    assert r_low.status_code == 201, r_low.text
+    low_id = r_low.json()["id"]
+
+    r_high = client.post("/api/v1/applications", json=payload_high)
+    assert r_high.status_code == 201, r_high.text
+    high_id = r_high.json()["id"]
+
+    r = client.get(f"/api/v1/applications?tenant_id={tenant_id}&sort_by=amount&sort_order=asc")
+    assert r.status_code == 200, r.text
+
+    ids = [i["id"] for i in r.json()["items"]]
+    assert ids == [low_id, high_id]

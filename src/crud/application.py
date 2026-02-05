@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+import sqlalchemy as sa
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -74,6 +75,9 @@ async def list_applications(
     status: str | None = None,
     from_date: datetime | None = None,
     to_date: datetime | None = None,
+    search: str | None = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Application], int]:
@@ -90,6 +94,13 @@ async def list_applications(
     if status:
         base = base.where(Application.status == status)
 
+    if search:
+        s = f"%{search.strip()}%"
+        base = base.where(
+            (Application.external_id.ilike(s))
+            | (Application.applicant_data["name"].astext.ilike(s))
+        )
+
     # If caller provided naive datetimes, assume UTC.
     if from_date is not None and from_date.tzinfo is None:
         from_date = from_date.replace(tzinfo=timezone.utc)
@@ -105,7 +116,22 @@ async def list_applications(
     count_q = select(func.count()).select_from(base.subquery())
     total = int((await session.execute(count_q)).scalar_one())
 
-    q = base.order_by(Application.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    # Ordering
+    order_expr = None
+    if sort_by == "created_at":
+        order_expr = Application.created_at
+    elif sort_by == "amount":
+        # loan_request is JSONB; cast loan_amount to numeric for sorting.
+        order_expr = Application.loan_request["loan_amount"].astext.cast(sa.Numeric)
+    else:
+        order_expr = Application.created_at
+
+    if sort_order == "asc":
+        order_expr = order_expr.asc()
+    else:
+        order_expr = order_expr.desc()
+
+    q = base.order_by(order_expr).offset((page - 1) * page_size).limit(page_size)
     items = (await session.execute(q)).scalars().all()
 
     return items, total
