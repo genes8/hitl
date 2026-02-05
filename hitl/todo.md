@@ -90,7 +90,7 @@ Tasks:
 - [x] Create migration: 010_create_similar_cases.py (in 004_remaining_tables)
 - [x] Create migration: 011_create_notifications.py (in 004_remaining_tables)
 - [x] Create migration: 012_create_loan_outcomes.py (in 004_remaining_tables)
-- [ ] Create all indexes as specified in PRD
+- [x] Create all indexes as specified in PRD (added missing analyst_queues indexes in 007_queue_indexes)
 - [x] Create trigger: update_updated_at_column()
 - [x] Apply trigger to all tables with updated_at (tenants/users/applications/analyst_queues/decision_thresholds)
 - [x] Create function: sync_application_status()
