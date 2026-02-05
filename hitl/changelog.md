@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: added model_registry, similar_cases, notifications, loan_outcomes (migration 004).
+
 - CI: fixed GitHub Actions service healthcheck options (postgres) to avoid docker invalid reference format.
 
 - CI: added GitHub Actions workflow to run Alembic migrations + pytest on PRs and main.
