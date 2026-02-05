@@ -101,8 +101,8 @@ Tasks:
 - [x] Create view: v_queue_metrics
 - [x] Write seed data script for development
 - [x] Test: All migrations run successfully (up/down) (CI smoke test)
-- [ ] Test: Constraints work correctly
-- [ ] Test: Functions return expected results
+- [x] Test: Constraints work correctly
+- [x] Test: Functions return expected results
 
 Definition of Done:
 - Database schema matches PRD specification

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: add tests for Postgres functions (calculate_queue_priority / get_active_threshold / sync_application_status) and for key schema constraints.
+
 - DB/CI: added pytest smoke-test to verify Alembic migrations are reversible (upgrade -> downgrade -> upgrade).
 - Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
 
