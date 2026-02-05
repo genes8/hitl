@@ -99,7 +99,7 @@ Tasks:
 - [x] Create view: v_daily_decision_summary
 - [x] Create view: v_analyst_performance
 - [x] Create view: v_queue_metrics
-- [ ] Write seed data script for development
+- [x] Write seed data script for development (src/scripts/seed_dev_data.py)
 - [ ] Test: All migrations run successfully (up/down)
 - [ ] Test: Constraints work correctly
 - [ ] Test: Functions return expected results

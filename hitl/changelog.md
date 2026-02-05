@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Dev/DB: add idempotent dev seed script (`python -m src.scripts.seed_dev_data`) to create demo tenant/users/threshold + sample applications.
+
 - API: added GET /api/v1/applications/{id} (optional `tenant_id` query param for scoping) + tests.
 - API: application detail now includes latest scoring_result when present + tests.
 - API: application detail now includes latest queue_info + decision_history when present + tests.
