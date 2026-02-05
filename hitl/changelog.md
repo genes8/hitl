@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
+
 - DB: added DB functions calculate_queue_priority() and get_active_threshold().
 
 - DB/CI: update migration 004 down_revision to renamed 003 id.
