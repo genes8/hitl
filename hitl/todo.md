@@ -488,7 +488,7 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.2)
 
 Tasks:
-- [ ] Create GET /applications/{id} endpoint
+- [x] Create GET /applications/{id} endpoint
 - [ ] Include scoring_result (if exists)
 - [ ] Include queue_info (if in queue)
 - [ ] Include decision_history (all decisions)
