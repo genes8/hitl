@@ -29,10 +29,14 @@ def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
             "payment_to_income": None,
         }
 
+    # Keep floats stable for JSON + tests; round to 4dp to avoid representation noise.
+    def _r(v: float) -> float:
+        return round(v, 4)
+
     return {
-        "dti_ratio": (monthly_obligations + existing_loans_payment) / net_income,
-        "loan_to_income": loan_amount / (net_income * 12.0),
-        "payment_to_income": estimated_payment / net_income,
+        "dti_ratio": _r((monthly_obligations + existing_loans_payment) / net_income),
+        "loan_to_income": _r(loan_amount / (net_income * 12.0)),
+        "payment_to_income": _r(estimated_payment / net_income),
     }
 
 
