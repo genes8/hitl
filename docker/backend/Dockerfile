@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -U pip \
     pydantic-settings==2.5.* \
     sqlalchemy==2.0.* \
     asyncpg==0.29.* \
+    psycopg[binary]==3.1.* \
     alembic==1.13.* \
     pytest==8.* \
     httpx==0.27.*

@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
+
+- DB/CI: added pytest smoke-test to verify Alembic migrations are reversible (upgrade -> downgrade -> upgrade).
+- Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
+
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
