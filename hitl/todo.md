@@ -1,5 +1,10 @@
 # HITL Credit Approval System - Development Phases & TODOs
 
+## Current implementation status (living note)
+- Track what’s actually merged/implemented in `hitl/changelog.md`.
+- Phase 1 foundation work (Docker + migrations + DB functions/views + CI + seed tooling) is in-progress.
+- Phase 2 has started (POST /api/v1/applications implemented).
+
 This document contains all development tasks organized by phase, ready for engineer handoff.
 
 -----
