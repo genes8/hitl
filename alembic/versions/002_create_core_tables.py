@@ -76,6 +76,20 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("NOW()"), nullable=False),
     )
+    op.create_index(
+        "idx_queue_priority",
+        "analyst_queues",
+        ["status", "priority", "created_at"],
+        unique=False,
+        postgresql_where=sa.text("status IN ('pending','assigned')"),
+    )
+    op.create_index(
+        "idx_queue_sla",
+        "analyst_queues",
+        ["sla_deadline"],
+        unique=False,
+        postgresql_where=sa.text("status IN ('pending','assigned','in_progress')"),
+    )
 
     op.create_table(
         "decisions",
@@ -106,6 +120,8 @@ def downgrade() -> None:
     op.drop_index("idx_decisions_application", table_name="decisions")
     op.drop_table("decisions")
 
+    op.drop_index("idx_queue_sla", table_name="analyst_queues")
+    op.drop_index("idx_queue_priority", table_name="analyst_queues")
     op.drop_table("analyst_queues")
 
     op.drop_index("idx_scoring_routing", table_name="scoring_results")
