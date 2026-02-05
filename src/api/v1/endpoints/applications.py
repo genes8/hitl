@@ -9,6 +9,7 @@ from src.crud.analyst_queue import get_latest_queue_entry_for_application
 from src.crud.application import create_application, get_application
 from src.crud.decision import list_decisions_for_application
 from src.crud.scoring_result import get_latest_scoring_result_for_application
+from src.crud.similar_case import list_similar_cases_for_application
 from src.database import get_db
 from src.schemas.application import ApplicationCreate, ApplicationRead
 
@@ -47,10 +48,12 @@ async def get_application_endpoint(
     scoring = await get_latest_scoring_result_for_application(session, application_id=app.id)
     queue_entry = await get_latest_queue_entry_for_application(session, application_id=app.id)
     decisions = await list_decisions_for_application(session, application_id=app.id)
+    similar_cases = await list_similar_cases_for_application(session, application_id=app.id)
 
     # Attach dynamically so the existing Application model doesn't need ORM relationships yet.
     setattr(app, "scoring_result", scoring)
     setattr(app, "queue_info", queue_entry)
     setattr(app, "decision_history", decisions)
+    setattr(app, "similar_cases", similar_cases)
 
     return ApplicationRead.model_validate(app)

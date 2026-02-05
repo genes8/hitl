@@ -64,6 +64,7 @@ def test_get_application_200():
 
     assert data["queue_info"] is None
     assert data["decision_history"] == []
+    assert data["similar_cases"] == []
 
 
 def _insert_scoring_result(application_id: str):
@@ -192,6 +193,40 @@ def _insert_decision(application_id: str, *, decision_type: str = "analyst_appro
     return decision_id
 
 
+def _insert_similar_case(application_id: str, *, match_score: float = 0.92):
+    similar_case_id = uuid.uuid4()
+    matched_application_id = uuid.uuid4()
+
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO similar_cases (
+                    id,
+                    application_id,
+                    matched_application_id,
+                    match_score,
+                    features_snapshot,
+                    outcome_snapshot,
+                    method
+                )
+                VALUES (%s, %s, %s, %s, %s::jsonb, %s::jsonb, %s)
+                """,
+                (
+                    similar_case_id,
+                    uuid.UUID(application_id),
+                    matched_application_id,
+                    match_score,
+                    '{"dti_ratio": 0.3}',
+                    '{"decision_outcome": "approved"}',
+                    "vector",
+                ),
+            )
+        conn.commit()
+
+    return similar_case_id
+
+
 def test_get_application_404_when_tenant_scoping_mismatch():
     tenant_a = _create_tenant("Tenant A")
     tenant_b = _create_tenant("Tenant B")
@@ -257,3 +292,21 @@ def test_get_application_includes_decision_history_when_present():
     assert len(data["decision_history"]) == 2
     assert data["decision_history"][0]["application_id"] == created["id"]
     assert data["decision_history"][0]["decision_type"] in {"analyst_approve", "analyst_decline"}
+
+
+def test_get_application_includes_similar_cases_when_present():
+    tenant_id = _create_tenant()
+    created = _create_application(tenant_id)
+
+    _insert_similar_case(created["id"], match_score=0.91)
+    _insert_similar_case(created["id"], match_score=0.95)
+
+    client = TestClient(app)
+    r = client.get(f"/api/v1/applications/{created['id']}")
+
+    assert r.status_code == 200, r.text
+    data = r.json()
+
+    assert len(data["similar_cases"]) == 2
+    assert data["similar_cases"][0]["application_id"] == created["id"]
+    assert data["similar_cases"][0]["match_score"] >= data["similar_cases"][1]["match_score"]
