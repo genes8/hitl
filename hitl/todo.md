@@ -100,7 +100,7 @@ Tasks:
 - [x] Create view: v_analyst_performance
 - [x] Create view: v_queue_metrics
 - [x] Write seed data script for development
-- [ ] Test: All migrations run successfully (up/down)
+- [x] Test: All migrations run successfully (up/down) (CI smoke test)
 - [ ] Test: Constraints work correctly
 - [ ] Test: Functions return expected results
 

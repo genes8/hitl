@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- DB/CI: added pytest smoke-test to verify Alembic migrations are reversible (upgrade -> downgrade -> upgrade).
+- Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
+
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
 
 - API: round derived application ratios (dti_ratio / loan_to_income / payment_to_income) to 4dp for stable JSON + tests.
