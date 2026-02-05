@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -18,6 +19,8 @@ async def list_applications_endpoint(
     tenant_id: UUID | None = Query(default=None),
     status: str | None = Query(default=None),
     search: str | None = Query(default=None),
+    from_date: datetime | None = Query(default=None),
+    to_date: datetime | None = Query(default=None),
     sort_by: str = Query(default="created_at"),
     sort_order: str = Query(default="desc"),
     page: int = Query(default=1, ge=1),
@@ -30,6 +33,8 @@ async def list_applications_endpoint(
             tenant_id=tenant_id,
             status=status,
             search=search,
+            from_date=from_date,
+            to_date=to_date,
             sort_by=sort_by,
             sort_order=sort_order,
             page=page,

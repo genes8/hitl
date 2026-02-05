@@ -6,6 +6,7 @@
 - API: validate POST /api/v1/applications required fields (applicant_data/financial_data/loan_request) + tests.
 - API: added GET /api/v1/applications/{id} (+ optional tenant_id scoping) + tests.
 - API: added GET /api/v1/applications (list) with tenant/status/search filters + pagination + sort_by (created_at/amount) + tests.
+- API: added from_date/to_date filtering + sort_by=score (outer join scoring_results) for GET /api/v1/applications + tests.
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
 

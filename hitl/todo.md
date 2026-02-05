@@ -461,10 +461,10 @@ Tasks:
 - [x] Create GET /applications endpoint
 - [ ] Implement query parameters:
   - [x] status: string (pending, scoring, review, approved, declined)
-  - [ ] from_date: datetime
-  - [ ] to_date: datetime
+  - [x] from_date: datetime
+  - [x] to_date: datetime
   - [x] search: string (external_id, applicant name)
-  - [ ] sort_by: string (created_at, amount, score)
+  - [x] sort_by: string (created_at, amount, score)
   - [x] sort_order: asc | desc
   - [x] page: int (default 1)
   - [x] page_size: int (default 20, max 100)

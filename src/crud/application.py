@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
+from src.models.scoring_result import ScoringResult
 from src.models.audit_log import AuditLog
 from src.schemas.application import ApplicationCreate
 
@@ -102,6 +103,8 @@ async def list_applications(
     tenant_id=None,
     status: str | None = None,
     search: str | None = None,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
     sort_by: str = "created_at",
     sort_order: str = "desc",
     page: int = 1,
@@ -123,6 +126,12 @@ async def list_applications(
     if status is not None:
         stmt = stmt.where(Application.status == status)
 
+    if from_date is not None:
+        stmt = stmt.where(Application.created_at >= from_date)
+
+    if to_date is not None:
+        stmt = stmt.where(Application.created_at <= to_date)
+
     if search:
         # Spec: external_id, applicant name.
         # Note: applicant_data is JSONB. We search case-insensitive.
@@ -134,23 +143,36 @@ async def list_applications(
             )
         )
 
+    needs_score_join = sort_by == "score"
+
+    if needs_score_join:
+        stmt = stmt.outerjoin(ScoringResult, ScoringResult.application_id == Application.id)
+
     # Sorting
     if sort_by == "created_at":
         sort_col = Application.created_at
     elif sort_by == "amount":
         sort_col = Application.loan_request["loan_amount"].as_float()
+    elif sort_by == "score":
+        sort_col = ScoringResult.score
     else:
-        raise ValueError("sort_by must be one of: created_at, amount")
+        raise ValueError("sort_by must be one of: created_at, amount, score")
 
     if sort_order == "asc":
-        stmt = stmt.order_by(sort_col.asc())
+        stmt = stmt.order_by(sort_col.asc().nullslast())
     elif sort_order == "desc":
-        stmt = stmt.order_by(sort_col.desc())
+        stmt = stmt.order_by(sort_col.desc().nullslast())
     else:
         raise ValueError("sort_order must be one of: asc, desc")
 
     # Total count
-    count_stmt = select(func.count()).select_from(stmt.subquery())
+    subq = stmt.subquery()
+    if needs_score_join:
+        count_stmt = select(func.count(func.distinct(subq.c.id)))
+    else:
+        count_stmt = select(func.count())
+
+    count_stmt = count_stmt.select_from(subq)
     total = (await session.execute(count_stmt)).scalar_one()
 
     # Page
@@ -158,5 +180,5 @@ async def list_applications(
     stmt = stmt.offset(offset).limit(page_size)
 
     res = await session.execute(stmt)
-    items = list(res.scalars().all())
+    items = list(res.scalars().unique().all())
     return items, int(total)
