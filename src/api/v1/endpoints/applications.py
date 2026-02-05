@@ -37,6 +37,9 @@ async def list_applications_endpoint(
     status: str | None = Query(None, description="Application status"),
     from_date: datetime | None = Query(None, description="Filter: created_at >= from_date"),
     to_date: datetime | None = Query(None, description="Filter: created_at <= to_date"),
+    search: str | None = Query(None, description="Search: external_id or applicant name"),
+    sort_by: str = Query("created_at", description="Sort field: created_at | amount"),
+    sort_order: str = Query("desc", description="Sort order: asc | desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     session: AsyncSession = Depends(get_db),
@@ -48,12 +51,24 @@ async def list_applications_endpoint(
     except ValueError:
         raise HTTPException(status_code=422, detail="Invalid tenant_id")
 
+    if from_date is not None and to_date is not None and from_date > to_date:
+        raise HTTPException(status_code=422, detail="from_date must be <= to_date")
+
+    if sort_by not in {"created_at", "amount"}:
+        raise HTTPException(status_code=422, detail="Invalid sort_by")
+
+    if sort_order not in {"asc", "desc"}:
+        raise HTTPException(status_code=422, detail="Invalid sort_order")
+
     items, total = await list_applications(
         session=session,
         tenant_id=tenant_uuid,
         status=status,
         from_date=from_date,
         to_date=to_date,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         page_size=page_size,
     )

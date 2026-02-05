@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
+- API: validate from_date <= to_date and validate sort_by/sort_order (422).
+
 - API: add from_date/to_date filters to GET /api/v1/applications (+ tests).
 
 - API: add GET /api/v1/applications listing endpoint with tenant_id scoping, status filter, and simple pagination (+ tests).
