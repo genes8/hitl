@@ -7,8 +7,10 @@ import sqlalchemy as sa
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.analyst_queue import AnalystQueue
 from src.models.application import Application
 from src.models.audit_log import AuditLog
+from src.models.decision import Decision
 from src.models.scoring_result import ScoringResult
 from src.schemas.application import ApplicationCreate
 
@@ -66,6 +68,31 @@ async def get_latest_scoring_result(
     )
     r = await session.execute(q)
     return r.scalar_one_or_none()
+
+
+async def get_latest_queue_entry(
+    session: AsyncSession,
+    *,
+    application_id,
+) -> AnalystQueue | None:
+    q = (
+        select(AnalystQueue)
+        .where(AnalystQueue.application_id == application_id)
+        .order_by(AnalystQueue.created_at.desc())
+        .limit(1)
+    )
+    r = await session.execute(q)
+    return r.scalar_one_or_none()
+
+
+async def list_decisions(
+    session: AsyncSession,
+    *,
+    application_id,
+) -> list[Decision]:
+    q = select(Decision).where(Decision.application_id == application_id).order_by(Decision.created_at.desc())
+    r = await session.execute(q)
+    return list(r.scalars().all())
 
 
 async def list_applications(
