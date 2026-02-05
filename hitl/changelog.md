@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- API: add basic intake validation for required sections and return 422 on missing keys.
+
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).

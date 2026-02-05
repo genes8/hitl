@@ -42,3 +42,9 @@ class ApplicationRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+def _require_keys(obj: dict, keys: list[str], field: str) -> None:
+    missing = [k for k in keys if k not in obj]
+    if missing:
+        raise ValueError(f"{field}: missing keys: {', '.join(missing)}")
