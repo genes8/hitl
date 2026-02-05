@@ -6,6 +6,7 @@
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
+- API: added GET /api/v1/applications/{id} (detail) with optional tenant scoping via `tenant_id` query param; includes latest scoring_result when present.
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
 

@@ -99,7 +99,7 @@ Tasks:
 - [x] Create view: v_daily_decision_summary
 - [x] Create view: v_analyst_performance
 - [x] Create view: v_queue_metrics
-- [x] Write seed data script for development
+- [ ] Write seed data script for development
 - [ ] Test: All migrations run successfully (up/down)
 - [ ] Test: Constraints work correctly
 - [ ] Test: Functions return expected results
@@ -484,7 +484,7 @@ Can be parallelized: Yes (with TODO-2.1.2)
 
 Tasks:
 - [x] Create GET /applications/{id} endpoint
-- [ ] Include scoring_result (if exists)
+- [x] Include scoring_result (if exists)
 - [ ] Include queue_info (if in queue)
 - [ ] Include decision_history (all decisions)
 - [ ] Include similar_cases (if available)
