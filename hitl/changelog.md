@@ -14,6 +14,8 @@
 
 - DB: added DB functions calculate_queue_priority() and get_active_threshold().
 
+- DB: added analyst_queues partial indexes per PRD (idx_queue_priority, idx_queue_sla).
+
 - DB/CI: update migration 004 down_revision to renamed 003 id.
 
 - DB: fix SQLAlchemy reserved attribute `metadata` in ModelRegistry model (renamed to `meta`).
