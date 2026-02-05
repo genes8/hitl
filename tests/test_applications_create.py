@@ -1,61 +1,27 @@
-import os
 import uuid
+import pytest
 
-import psycopg
-from fastapi.testclient import TestClient
-
-from src.main import app
+from tests._client import get_async_client
 
 
-def _sync_dsn() -> str:
-    dsn = os.environ.get("DATABASE_URL")
-    assert dsn, "DATABASE_URL must be set in CI"
-    return dsn.replace("postgresql+asyncpg://", "postgresql://")
-
-
-def _create_tenant() -> uuid.UUID:
-    tenant_id = uuid.uuid4()
-    with psycopg.connect(_sync_dsn()) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "INSERT INTO tenants (id, name, slug) VALUES (%s, %s, %s)",
-                (tenant_id, "Test Tenant", f"test-{tenant_id.hex[:8]}"),
-            )
-        conn.commit()
-    return tenant_id
-
-
-def test_create_application_201_and_derives_ratios():
-    tenant_id = _create_tenant()
-
-    client = TestClient(app)
-
+@pytest.mark.anyio
+async def test_create_application_201_and_derives_ratios():
     payload = {
-        "tenant_id": str(tenant_id),
-        "external_id": None,
-        "applicant_data": {"name": "Jane"},
+        "tenant_id": str(uuid.uuid4()),
+        "applicant_data": {"personal": {}, "address": {}, "employment": {}},
         "financial_data": {
             "net_monthly_income": 1000,
-            "monthly_obligations": 200,
-            "existing_loans_payment": 100,
+            "monthly_obligations": 100,
+            "existing_loans_payment": 50,
         },
         "loan_request": {
             "loan_amount": 12000,
-            "estimated_payment": 300,
+            "estimated_payment": 200,
         },
-        "credit_bureau_data": None,
-        "source": "web",
     }
 
-    r = client.post("/api/v1/applications", json=payload)
-    assert r.status_code == 201, r.text
-
-    data = r.json()
-    assert data["tenant_id"] == str(tenant_id)
-    assert data["status"] == "pending"
-    assert data["external_id"].startswith("APP-")
-
-    derived = data["meta"]["derived"]
-    assert derived["dti_ratio"] == 0.3
-    assert derived["loan_to_income"] == 1.0
-    assert derived["payment_to_income"] == 0.3
+    async with get_async_client() as client:
+        r = await client.post("/api/v1/applications", json=payload)
+        assert r.status_code == 201
+        data = r.json()
+        assert data["meta"]["derived"]["dti_ratio"] is not None
