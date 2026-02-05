@@ -329,15 +329,24 @@ async def update_application(
         # Nothing to do.
         return app
 
+    action = "update"
+    old_value = None
+    change_summary = "application updated"
+
+    if set(updates.keys()) == {"status"} and updates.get("status") == "cancelled":
+        action = "cancel"
+        old_value = {"status": "pending"}
+        change_summary = "application cancelled"
+
     audit = AuditLog(
         tenant_id=app.tenant_id,
         user_id=None,
         entity_type="application",
         entity_id=app.id,
-        action="update",
-        old_value=None,
+        action=action,
+        old_value=old_value,
         new_value=updates,
-        change_summary="application updated",
+        change_summary=change_summary,
     )
     session.add(audit)
 

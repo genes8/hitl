@@ -127,3 +127,46 @@ def test_patch_application_409_for_invalid_status_transition():
 
     r = client.patch(f"/api/v1/applications/{app_id}", json={"status": "approved"})
     assert r.status_code == 409, r.text
+
+
+def test_patch_application_allows_cancel_and_writes_cancel_audit_log():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": "APP-CANCEL",
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+
+    r = client.patch(f"/api/v1/applications/{app_id}", json={"status": "cancelled"})
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "cancelled"
+
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT action, old_value->>'status', new_value->>'status' "
+                "FROM audit_logs WHERE entity_type='application' AND entity_id=%s "
+                "ORDER BY created_at DESC LIMIT 1",
+                (app_id,),
+            )
+            row = cur.fetchone()
+
+    assert row is not None
+    assert row[0] == "cancel"
+    assert row[1] == "pending"
+    assert row[2] == "cancelled"

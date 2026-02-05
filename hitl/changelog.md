@@ -3,6 +3,7 @@
 ## Unreleased
 
 - API: add PATCH /api/v1/applications/{id} endpoint to update pending applications (incl. derived meta recompute + tests).
+- API: when PATCH cancels an application (status=cancelled), write an explicit `cancel` audit_log entry (+ tests).
 
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
 - API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
