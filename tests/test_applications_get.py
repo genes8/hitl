@@ -62,6 +62,41 @@ def test_get_application_404_when_unknown_uuid():
     assert r.status_code == 404
 
 
+def test_get_application_404_when_tenant_mismatch():
+    tenant_id = _create_tenant()
+    other_tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = created.json()["id"]
+
+    r = client.get(f"/api/v1/applications/{app_id}?tenant_id={other_tenant_id}")
+    assert r.status_code == 404
+
+
+def test_get_application_422_when_bad_tenant_id_format():
+    client = TestClient(app)
+
+    r = client.get(f"/api/v1/applications/{uuid.uuid4()}?tenant_id=not-a-uuid")
+    assert r.status_code == 422
+
+
 def test_get_application_404_when_bad_id_format():
     client = TestClient(app)
 

@@ -84,18 +84,26 @@ async def list_applications_endpoint(
 @router.get("/{application_id}", response_model=ApplicationRead)
 async def get_application_endpoint(
     application_id: str,
+    tenant_id: str | None = Query(None, description="Optional tenant UUID to enforce isolation"),
     session: AsyncSession = Depends(get_db),
 ) -> ApplicationRead:
+    import uuid
+
     try:
         # FastAPI will accept UUID directly, but keep it explicit to get a clean 404
         # rather than a 422 for malformed UUIDs later.
-        import uuid
-
         app_id = uuid.UUID(application_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    app = await get_application(session=session, application_id=app_id)
+    tenant_uuid = None
+    if tenant_id is not None:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    app = await get_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
     if app is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
