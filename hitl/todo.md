@@ -421,23 +421,23 @@ Estimated Hours: 24
 Can be parallelized: No
 
 Tasks:
-- [ ] Create POST /applications endpoint
+- [x] Create POST /applications endpoint
 - [ ] Validate required fields in applicant_data
 - [ ] Validate required fields in financial_data
 - [ ] Validate loan_request fields
-- [ ] Calculate derived fields:
-  - [ ] dti_ratio = (monthly_obligations + existing_loans_payment) / net_monthly_income
-  - [ ] loan_to_income = loan_amount / (net_monthly_income * 12)
-  - [ ] payment_to_income = estimated_payment / net_monthly_income
-- [ ] Set initial status = ‘pending’
-- [ ] Generate external_id if not provided
-- [ ] Set expires_at (default: 30 days)
+- [x] Calculate derived fields:
+  - [x] dti_ratio = (monthly_obligations + existing_loans_payment) / net_monthly_income
+  - [x] loan_to_income = loan_amount / (net_monthly_income * 12)
+  - [x] payment_to_income = estimated_payment / net_monthly_income
+- [x] Set initial status = ‘pending’
+- [x] Generate external_id if not provided
+- [x] Set expires_at (default: 30 days)
 - [ ] Emit Celery task: score_application
-- [ ] Create audit log entry
-- [ ] Return 201 with application ID
-- [ ] Test: Valid application created
+- [x] Create audit log entry
+- [x] Return 201 with application ID
+- [x] Test: Valid application created
 - [ ] Test: Validation errors return 422
-- [ ] Test: Derived fields calculated correctly
+- [x] Test: Derived fields calculated correctly
 
 Definition of Done:
 - Applications can be created via API
