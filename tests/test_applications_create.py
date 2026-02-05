@@ -59,3 +59,55 @@ def test_create_application_201_and_derives_ratios():
     assert derived["dti_ratio"] == 0.3
     assert derived["loan_to_income"] == 1.0
     assert derived["payment_to_income"] == 0.3
+
+
+def test_create_application_422_when_missing_required_fields():
+    tenant_id = _create_tenant()
+
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {},  # missing name
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {
+            "loan_amount": 12000,
+            "estimated_payment": 300,
+        },
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    r = client.post("/api/v1/applications", json=payload)
+    assert r.status_code == 422, r.text
+
+
+def test_create_application_422_when_income_non_positive():
+    tenant_id = _create_tenant()
+
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 0,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {
+            "loan_amount": 12000,
+            "estimated_payment": 300,
+        },
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    r = client.post("/api/v1/applications", json=payload)
+    assert r.status_code == 422, r.text

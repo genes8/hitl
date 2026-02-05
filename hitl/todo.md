@@ -422,9 +422,9 @@ Can be parallelized: No
 
 Tasks:
 - [x] Create POST /applications endpoint
-- [ ] Validate required fields in applicant_data
-- [ ] Validate required fields in financial_data
-- [ ] Validate loan_request fields
+- [x] Validate required fields in applicant_data
+- [x] Validate required fields in financial_data
+- [x] Validate loan_request fields
 - [x] Calculate derived fields:
   - [x] dti_ratio = (monthly_obligations + existing_loans_payment) / net_monthly_income
   - [x] loan_to_income = loan_amount / (net_monthly_income * 12)
@@ -436,7 +436,7 @@ Tasks:
 - [x] Create audit log entry
 - [x] Return 201 with application ID
 - [x] Test: Valid application created
-- [ ] Test: Validation errors return 422
+- [x] Test: Validation errors return 422
 - [x] Test: Derived fields calculated correctly
 
 Definition of Done:
