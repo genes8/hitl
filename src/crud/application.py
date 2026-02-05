@@ -1,5 +1,14 @@
 from __future__ import annotations
 
+from fastapi import HTTPException
+
+
+REQUIRED_TOP_LEVEL = {
+    'applicant_data': ['personal', 'address', 'employment'],
+    'financial_data': ['income', 'expenses', 'assets', 'liabilities'],
+    'loan_request': ['amount', 'currency', 'term_months', 'purpose'],
+}
+
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
