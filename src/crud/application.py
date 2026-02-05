@@ -3,10 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
 from src.models.audit_log import AuditLog
+from src.models.scoring_result import ScoringResult
 from src.schemas.application import ApplicationCreate
 
 
@@ -34,6 +36,35 @@ def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
         "loan_to_income": loan_amount / (net_income * 12.0),
         "payment_to_income": estimated_payment / net_income,
     }
+
+
+async def get_application(
+    session: AsyncSession,
+    *,
+    application_id,
+    tenant_id=None,
+) -> Application | None:
+    q = select(Application).where(Application.id == application_id)
+    if tenant_id is not None:
+        q = q.where(Application.tenant_id == tenant_id)
+
+    r = await session.execute(q)
+    return r.scalar_one_or_none()
+
+
+async def get_latest_scoring_result(
+    session: AsyncSession,
+    *,
+    application_id,
+) -> ScoringResult | None:
+    q = (
+        select(ScoringResult)
+        .where(ScoringResult.application_id == application_id)
+        .order_by(ScoringResult.created_at.desc())
+        .limit(1)
+    )
+    r = await session.execute(q)
+    return r.scalar_one_or_none()
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:
