@@ -237,3 +237,49 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
     await session.commit()
     await session.refresh(app)
     return app
+
+
+async def cancel_application(
+    session: AsyncSession,
+    *,
+    application_id,
+    tenant_id=None,
+) -> Application | None:
+    """Soft-delete semantics for applications.
+
+    Spec (hitl/todo.md TODO-2.1.3): DELETE /applications/{id} sets status = cancelled.
+
+    Behavior:
+    - If application doesn't exist (or tenant mismatch) -> None
+    - If already cancelled -> idempotent (return application)
+    - If status != pending -> return application but do not change status; caller can decide how to respond
+    """
+
+    app = await get_application(session=session, application_id=application_id, tenant_id=tenant_id)
+    if app is None:
+        return None
+
+    if app.status == "cancelled":
+        return app
+
+    if app.status != "pending":
+        return app
+
+    old_status = app.status
+    app.status = "cancelled"
+
+    audit = AuditLog(
+        tenant_id=app.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=app.id,
+        action="cancel",
+        old_value={"status": old_status},
+        new_value={"status": "cancelled"},
+        change_summary="application cancelled",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(app)
+    return app

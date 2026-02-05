@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.application import (
+    cancel_application,
     create_application,
     get_application,
     get_latest_queue_entry,
@@ -116,6 +117,47 @@ async def get_application_endpoint(
     if app is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
+    scoring = await get_latest_scoring_result(session=session, application_id=app.id)
+    queue_entry = await get_latest_queue_entry(session=session, application_id=app.id)
+    decisions = await list_decisions(session=session, application_id=app.id)
+
+    payload = ApplicationRead.model_validate(app).model_dump()
+    payload["scoring_result"] = ScoringResultRead.model_validate(scoring).model_dump() if scoring else None
+    payload["queue_info"] = AnalystQueueRead.model_validate(queue_entry).model_dump() if queue_entry else None
+    payload["decision_history"] = [DecisionRead.model_validate(d).model_dump() for d in decisions]
+
+    return ApplicationRead(**payload)
+
+
+@router.delete("/{application_id}", response_model=ApplicationRead)
+async def cancel_application_endpoint(
+    application_id: str,
+    tenant_id: str | None = Query(None, description="Optional tenant UUID to enforce isolation"),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    tenant_uuid = None
+    if tenant_id is not None:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    app = await cancel_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if app.status != "cancelled":
+        # Only pending applications can be cancelled in v1.
+        raise HTTPException(status_code=409, detail="Application cannot be cancelled")
+
+    # Reuse detail serialization so the response stays consistent.
     scoring = await get_latest_scoring_result(session=session, application_id=app.id)
     queue_entry = await get_latest_queue_entry(session=session, application_id=app.id)
     decisions = await list_decisions(session=session, application_id=app.id)
