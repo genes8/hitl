@@ -3,6 +3,11 @@
 ## Unreleased
 
 - DB: added model_registry, similar_cases, notifications, loan_outcomes (migration 004).
+- DB/CI: fixed Alembic revision id length (kept <= 32 chars) to avoid alembic_version truncation errors.
+
+- DB/CI: fix SQLAlchemy reserved attribute `metadata` in Application model (renamed to `meta`).
+
+- DB/CI: fixed Alembic env import path so migrations can import `src` in CI.
 
 - CI: fixed GitHub Actions service healthcheck options (postgres) to avoid docker invalid reference format.
 
