@@ -266,6 +266,7 @@ Tasks:
 - [ ] Implement TenantCRUD class
 - [ ] Create get_current_tenant() dependency
 - [ ] Add tenant_id filter to all database queries
+  - [x] Application detail endpoint supports optional tenant scoping (`GET /applications/{id}?tenant_id=...`)
 - [ ] Create tenant context middleware
 - [ ] Implement tenant isolation in base CRUD
 - [ ] Create tenant management endpoints (admin only):

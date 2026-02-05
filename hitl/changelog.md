@@ -18,6 +18,7 @@
 - Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
 
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
+- API: enforce optional tenant scoping for GET /api/v1/applications/{id} via tenant_id query param.
 
 - API: round derived application ratios (dti_ratio / loan_to_income / payment_to_income) to 4dp for stable JSON + tests.
 
