@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from src.schemas.scoring_result import ScoringResultRead
+
 
 class ApplicationCreate(BaseModel):
     tenant_id: UUID
@@ -22,6 +24,8 @@ class ApplicationCreate(BaseModel):
 class ApplicationRead(BaseModel):
     id: UUID
     tenant_id: UUID
+
+    scoring_result: ScoringResultRead | None = None
 
     external_id: str | None
     status: str

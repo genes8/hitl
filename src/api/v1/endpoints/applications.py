@@ -6,8 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.application import create_application, get_application
+from src.crud.scoring_result import get_latest_scoring_result_for_application
 from src.database import get_db
 from src.schemas.application import ApplicationCreate, ApplicationRead
+from src.schemas.scoring_result import ScoringResultRead
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -36,4 +38,8 @@ async def get_application_endpoint(
     if app is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    return ApplicationRead.model_validate(app)
+    scoring = await get_latest_scoring_result_for_application(session=session, application_id=app.id)
+
+    out = ApplicationRead.model_validate(app)
+    out.scoring_result = ScoringResultRead.model_validate(scoring) if scoring is not None else None
+    return out
