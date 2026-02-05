@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB: fix SQLAlchemy reserved attribute `metadata` in ModelRegistry model (renamed to `meta`).
+
 - DB: added model_registry, similar_cases, notifications, loan_outcomes (migration 004).
 - DB/CI: fixed Alembic revision id length (kept <= 32 chars) to avoid alembic_version truncation errors.
 

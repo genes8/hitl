@@ -18,7 +18,7 @@ class ModelRegistry(Base):
     version: Mapped[str] = mapped_column(String(50), nullable=False)
     stage: Mapped[str] = mapped_column(String(30), nullable=False, server_default="production")
 
-    metadata: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default='{}')
+    meta: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, server_default='{}')
     artifact_uri: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
