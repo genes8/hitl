@@ -83,3 +83,10 @@ class ApplicationRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ApplicationListResponse(BaseModel):
+    items: list[ApplicationRead]
+    total: int
+    page: int
+    page_size: int

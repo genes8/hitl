@@ -5,12 +5,45 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.application import create_application, get_application
+from src.crud.application import create_application, get_application, list_applications
 from src.database import get_db
-from src.schemas.application import ApplicationCreate, ApplicationRead
+from src.schemas.application import ApplicationCreate, ApplicationListResponse, ApplicationRead
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
+
+
+@router.get("", response_model=ApplicationListResponse)
+async def list_applications_endpoint(
+    tenant_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None),
+    search: str | None = Query(default=None),
+    sort_by: str = Query(default="created_at"),
+    sort_order: str = Query(default="desc"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationListResponse:
+    try:
+        items, total = await list_applications(
+            session,
+            tenant_id=tenant_id,
+            status=status,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return ApplicationListResponse(
+        items=[ApplicationRead.model_validate(item) for item in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/{application_id}", response_model=ApplicationRead)

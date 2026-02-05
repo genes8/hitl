@@ -458,21 +458,21 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.3)
 
 Tasks:
-- [ ] Create GET /applications endpoint
+- [x] Create GET /applications endpoint
 - [ ] Implement query parameters:
-  - [ ] status: string (pending, scoring, review, approved, declined)
+  - [x] status: string (pending, scoring, review, approved, declined)
   - [ ] from_date: datetime
   - [ ] to_date: datetime
-  - [ ] search: string (external_id, applicant name)
+  - [x] search: string (external_id, applicant name)
   - [ ] sort_by: string (created_at, amount, score)
-  - [ ] sort_order: asc | desc
-  - [ ] page: int (default 1)
-  - [ ] page_size: int (default 20, max 100)
+  - [x] sort_order: asc | desc
+  - [x] page: int (default 1)
+  - [x] page_size: int (default 20, max 100)
 - [ ] Implement cursor pagination option
 - [ ] Optimize query with proper indexes
-- [ ] Return paginated response with total count
-- [ ] Test: Filters work correctly
-- [ ] Test: Pagination returns correct pages
+- [x] Return paginated response with total count
+- [x] Test: Filters work correctly
+- [x] Test: Pagination returns correct pages
 - [ ] Test: Response time < 100ms for 10k records
 
 Definition of Done:

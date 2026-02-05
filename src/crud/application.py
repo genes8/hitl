@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
@@ -94,3 +94,69 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
     await session.commit()
     await session.refresh(app)
     return app
+
+
+async def list_applications(
+    session: AsyncSession,
+    *,
+    tenant_id=None,
+    status: str | None = None,
+    search: str | None = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[Application], int]:
+    """Return (items, total). Pagination is page-based."""
+
+    if page < 1:
+        raise ValueError("page must be >= 1")
+    if page_size < 1 or page_size > 100:
+        raise ValueError("page_size must be between 1 and 100")
+
+    # Base filters
+    stmt = select(Application)
+
+    if tenant_id is not None:
+        stmt = stmt.where(Application.tenant_id == tenant_id)
+
+    if status is not None:
+        stmt = stmt.where(Application.status == status)
+
+    if search:
+        # Spec: external_id, applicant name.
+        # Note: applicant_data is JSONB. We search case-insensitive.
+        like = f"%{search}%"
+        stmt = stmt.where(
+            (
+                Application.external_id.ilike(like)
+                | Application.applicant_data["name"].as_string().ilike(like)
+            )
+        )
+
+    # Sorting
+    if sort_by == "created_at":
+        sort_col = Application.created_at
+    elif sort_by == "amount":
+        sort_col = Application.loan_request["loan_amount"].as_float()
+    else:
+        raise ValueError("sort_by must be one of: created_at, amount")
+
+    if sort_order == "asc":
+        stmt = stmt.order_by(sort_col.asc())
+    elif sort_order == "desc":
+        stmt = stmt.order_by(sort_col.desc())
+    else:
+        raise ValueError("sort_order must be one of: asc, desc")
+
+    # Total count
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await session.execute(count_stmt)).scalar_one()
+
+    # Page
+    offset = (page - 1) * page_size
+    stmt = stmt.offset(offset).limit(page_size)
+
+    res = await session.execute(stmt)
+    items = list(res.scalars().all())
+    return items, int(total)
