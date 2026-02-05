@@ -13,6 +13,7 @@ from src.crud.application import (
     get_latest_scoring_result,
     list_applications,
     list_decisions,
+    list_similar_cases,
 )
 from src.database import get_db
 from src.schemas.application import (
@@ -24,6 +25,7 @@ from src.schemas.application import (
 from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.decision import DecisionRead
 from src.schemas.scoring_result import ScoringResultRead
+from src.schemas.similar_case import SimilarCaseRead
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -120,11 +122,13 @@ async def get_application_endpoint(
     scoring = await get_latest_scoring_result(session=session, application_id=app.id)
     queue_entry = await get_latest_queue_entry(session=session, application_id=app.id)
     decisions = await list_decisions(session=session, application_id=app.id)
+    similar_cases = await list_similar_cases(session=session, application_id=app.id)
 
     payload = ApplicationRead.model_validate(app).model_dump()
     payload["scoring_result"] = ScoringResultRead.model_validate(scoring).model_dump() if scoring else None
     payload["queue_info"] = AnalystQueueRead.model_validate(queue_entry).model_dump() if queue_entry else None
     payload["decision_history"] = [DecisionRead.model_validate(d).model_dump() for d in decisions]
+    payload["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
 
     return ApplicationRead(**payload)
 
@@ -161,10 +165,12 @@ async def cancel_application_endpoint(
     scoring = await get_latest_scoring_result(session=session, application_id=app.id)
     queue_entry = await get_latest_queue_entry(session=session, application_id=app.id)
     decisions = await list_decisions(session=session, application_id=app.id)
+    similar_cases = await list_similar_cases(session=session, application_id=app.id)
 
     payload = ApplicationRead.model_validate(app).model_dump()
     payload["scoring_result"] = ScoringResultRead.model_validate(scoring).model_dump() if scoring else None
     payload["queue_info"] = AnalystQueueRead.model_validate(queue_entry).model_dump() if queue_entry else None
     payload["decision_history"] = [DecisionRead.model_validate(d).model_dump() for d in decisions]
+    payload["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
 
     return ApplicationRead(**payload)

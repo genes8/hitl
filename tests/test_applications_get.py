@@ -68,6 +68,38 @@ def _insert_scoring_result(*, application_id: uuid.UUID) -> uuid.UUID:
     return scoring_id
 
 
+def _insert_similar_case(*, application_id: uuid.UUID, match_score: float) -> uuid.UUID:
+    similar_id = uuid.uuid4()
+    matched_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO similar_cases (
+                  id,
+                  application_id,
+                  matched_application_id,
+                  match_score,
+                  features_snapshot,
+                  outcome_snapshot,
+                  method
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    similar_id,
+                    application_id,
+                    matched_id,
+                    match_score,
+                    {"dti_ratio": 0.31},
+                    {"decision": "approved"},
+                    "vector",
+                ),
+            )
+        conn.commit()
+    return similar_id
+
+
 def test_get_application_200_after_create():
     tenant_id = _create_tenant()
     client = TestClient(app)
@@ -131,6 +163,43 @@ def test_get_application_includes_scoring_result_when_exists():
     assert scoring["application_id"] == str(app_id)
     assert scoring["score"] == 720
     assert scoring["risk_category"] == "low"
+
+
+def test_get_application_includes_similar_cases_when_exist():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+
+    # Insert 2 cases; ensure response is ordered by match_score DESC.
+    top_id = _insert_similar_case(application_id=app_id, match_score=0.99)
+    _insert_similar_case(application_id=app_id, match_score=0.12)
+
+    r = client.get(f"/api/v1/applications/{app_id}")
+    assert r.status_code == 200, r.text
+
+    similar = r.json()["similar_cases"]
+    assert isinstance(similar, list)
+    assert len(similar) == 2
+    assert similar[0]["id"] == str(top_id)
+    assert similar[0]["application_id"] == str(app_id)
 
 
 def test_get_application_404_when_unknown_uuid():
