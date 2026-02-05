@@ -3,6 +3,7 @@
 ## Unreleased
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
+- API: validate required application intake fields (returns 422 on invalid payloads).
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
 
