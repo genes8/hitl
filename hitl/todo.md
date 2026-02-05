@@ -93,12 +93,12 @@ Tasks:
 - [ ] Create all indexes as specified in PRD
 - [x] Create trigger: update_updated_at_column()
 - [x] Apply trigger to all tables with updated_at (tenants/users/applications/analyst_queues/decision_thresholds)
-- [ ] Create function: sync_application_status()
+- [x] Create function: sync_application_status()
 - [x] Create function: calculate_queue_priority()
 - [x] Create function: get_active_threshold()
-- [ ] Create view: v_daily_decision_summary
-- [ ] Create view: v_analyst_performance
-- [ ] Create view: v_queue_metrics
+- [x] Create view: v_daily_decision_summary
+- [x] Create view: v_analyst_performance
+- [x] Create view: v_queue_metrics
 - [ ] Write seed data script for development
 - [ ] Test: All migrations run successfully (up/down)
 - [ ] Test: Constraints work correctly
