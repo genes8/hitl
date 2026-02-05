@@ -22,6 +22,7 @@ def upgrade() -> None:
         "analyst_queues",
         ["status", "priority", "created_at"],
         unique=False,
+        postgresql_where=sa.text("status IN ('pending','assigned')"),
     )
 
     # PRD index: CREATE INDEX idx_queue_sla ON analyst_queues(sla_deadline)
@@ -30,6 +31,7 @@ def upgrade() -> None:
         "analyst_queues",
         ["sla_deadline"],
         unique=False,
+        postgresql_where=sa.text("status IN ('pending','assigned','in_progress')"),
     )
 
 
