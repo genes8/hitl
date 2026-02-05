@@ -120,7 +120,7 @@ Can be parallelized: Yes (with TODO-1.1.2)
 
 Tasks:
 - [x] Initialize project with Poetry (pyproject.toml) (minimal pyproject scaffold)
-- [ ] Create src/ directory structure:
+- [x] Create src/ directory structure:
 
   ```text
   src/
@@ -142,21 +142,21 @@ Tasks:
   └── utils/
   ```
 
-- [ ] Configure Pydantic Settings (BaseSettings class)
-- [ ] Set up SQLAlchemy async engine
-- [ ] Create async session dependency
+- [x] Configure Pydantic Settings (BaseSettings class)
+- [x] Set up SQLAlchemy async engine
+- [x] Create async session dependency
 - [ ] Create base CRUD class with generic methods
-- [ ] Set up structured logging with request context
-- [ ] Configure CORS middleware (configurable origins)
+- [x] Set up structured logging with request context (lightweight access logging in middleware)
+- [x] Configure CORS middleware (configurable origins)
 - [x] Create health check endpoint: GET /health
 - [ ] Create global exception handlers (400, 401, 403, 404, 500)
-- [ ] Create request ID middleware
-- [ ] Configure OpenAPI documentation (/docs, /redoc)
+- [x] Create request ID middleware
+- [x] Configure OpenAPI documentation (/docs, /redoc) (FastAPI defaults)
 - [ ] Write pytest configuration (conftest.py)
 - [x] Write first test: test_health_check
-- [ ] Test: Server starts without errors
-- [ ] Test: /health returns 200
-- [ ] Test: /docs accessible
+- [x] Test: Server starts without errors (CI)
+- [x] Test: /health returns 200
+- [x] Test: /docs accessible (FastAPI defaults)
 
 Definition of Done:
 - FastAPI server runs
