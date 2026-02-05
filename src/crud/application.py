@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
@@ -34,6 +35,22 @@ def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
         "loan_to_income": loan_amount / (net_income * 12.0),
         "payment_to_income": estimated_payment / net_income,
     }
+
+
+async def get_application(
+    session: AsyncSession,
+    *,
+    application_id,
+    tenant_id=None,
+) -> Application | None:
+    stmt = select(Application).where(Application.id == application_id)
+
+    # Optional tenant scoping (requested in hitl/todo.md / changelog).
+    if tenant_id is not None:
+        stmt = stmt.where(Application.tenant_id == tenant_id)
+
+    res = await session.execute(stmt)
+    return res.scalar_one_or_none()
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:

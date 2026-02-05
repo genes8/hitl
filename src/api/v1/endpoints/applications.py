@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, status
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.application import create_application
+from src.crud.application import create_application, get_application
 from src.database import get_db
 from src.schemas.application import ApplicationCreate, ApplicationRead
 
@@ -20,5 +22,23 @@ async def create_application_endpoint(
 
     # TODO-2.1.1: Emit Celery task score_application(app.id)
     # Placeholder until Celery wiring lands.
+
+    return ApplicationRead.model_validate(app)
+
+
+@router.get("/{application_id}", response_model=ApplicationRead)
+async def get_application_endpoint(
+    application_id: UUID,
+    tenant_id: UUID | None = Query(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    app = await get_application(
+        session=session,
+        application_id=application_id,
+        tenant_id=tenant_id,
+    )
+
+    if app is None:
+        raise HTTPException(status_code=404, detail="application not found")
 
     return ApplicationRead.model_validate(app)
