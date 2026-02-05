@@ -95,15 +95,25 @@ async def list_applications(
     score_subq = None
     if sort_by == "score":
         # There may be multiple scoring results over time; list view sorts by the
-        # latest/highest score we have for the application (v0: max(score)).
-        score_subq = (
+        # *latest* scoring result score (by created_at).
+        latest_scoring = (
             select(
                 ScoringResult.application_id.label("app_id"),
-                func.max(ScoringResult.score).label("score"),
+                ScoringResult.score.label("score"),
+                func.row_number()
+                .over(
+                    partition_by=ScoringResult.application_id,
+                    order_by=ScoringResult.created_at.desc(),
+                )
+                .label("rn"),
             )
-            .group_by(ScoringResult.application_id)
             .subquery()
         )
+
+        score_subq = select(latest_scoring.c.app_id, latest_scoring.c.score).where(
+            latest_scoring.c.rn == 1
+        ).subquery()
+
         base = base.outerjoin(score_subq, score_subq.c.app_id == Application.id)
     if status:
         base = base.where(Application.status == status)
