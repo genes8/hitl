@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
+
 - API: round derived application ratios (dti_ratio / loan_to_income / payment_to_income) to 4dp for stable JSON + tests.
 
 - API: enforce basic intake validation for POST /api/v1/applications (required keys + numeric sanity checks) + added 422 tests.
