@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,6 +41,8 @@ async def create_application_endpoint(
 async def list_applications_endpoint(
     tenant_id: str = Query(..., description="Tenant UUID"),
     status: str | None = Query(None, description="Application status"),
+    from_date: datetime | None = Query(None, description="Filter: created_at >= from_date"),
+    to_date: datetime | None = Query(None, description="Filter: created_at <= to_date"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     session: AsyncSession = Depends(get_db),
@@ -54,6 +58,8 @@ async def list_applications_endpoint(
         session=session,
         tenant_id=tenant_uuid,
         status=status,
+        from_date=from_date,
+        to_date=to_date,
         page=page,
         page_size=page_size,
     )
