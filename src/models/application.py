@@ -24,7 +24,7 @@ class Application(Base):
     credit_bureau_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     source: Mapped[str] = mapped_column(String(50), nullable=False, server_default="web")
-    metadata: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default='{}')
+    meta: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, server_default='{}')
 
     submitted_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     expires_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True)
