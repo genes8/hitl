@@ -7,6 +7,7 @@
 - API: added GET /api/v1/applications/{id} (optional `tenant_id` query param for scoping) + tests.
 - API: application detail now includes latest scoring_result when present + tests.
 - API: application detail now includes latest queue_info + decision_history when present + tests.
+- API: application detail now includes similar_cases when present + tests.
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 
