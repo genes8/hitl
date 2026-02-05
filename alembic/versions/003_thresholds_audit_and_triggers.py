@@ -1,6 +1,6 @@
 """add decision thresholds, audit logs, and updated_at triggers
 
-Revision ID: 003_thresholds_audit_and_triggers
+Revision ID: 003_thresh_audit_trig
 Revises: 002_create_core_tables
 Create Date: 2026-02-04
 
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 
-revision = "003_thresholds_audit_and_triggers"
+revision = "003_thresh_audit_trig"
 down_revision = "002_create_core_tables"
 branch_labels = None
 depends_on = None

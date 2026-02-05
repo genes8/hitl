@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- DB/CI: fixed Alembic revision id length (kept <= 32 chars) to avoid alembic_version truncation errors.
+
 - CI: fixed GitHub Actions service healthcheck options (postgres) to avoid docker invalid reference format.
 
 - CI: added GitHub Actions workflow to run Alembic migrations + pytest on PRs and main.
