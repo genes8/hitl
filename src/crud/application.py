@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
@@ -65,6 +65,37 @@ async def get_latest_scoring_result(
     )
     r = await session.execute(q)
     return r.scalar_one_or_none()
+
+
+async def list_applications(
+    session: AsyncSession,
+    *,
+    tenant_id,
+    status: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[Application], int]:
+    # Phase 2.1.2 (minimal): listing + status filter + simple pagination.
+    # Tenant id is required until auth/tenant-context middleware lands.
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 1
+    if page_size > 100:
+        page_size = 100
+
+    base = select(Application).where(Application.tenant_id == tenant_id)
+    if status:
+        base = base.where(Application.status == status)
+
+    # total count
+    count_q = select(func.count()).select_from(base.subquery())
+    total = int((await session.execute(count_q)).scalar_one())
+
+    q = base.order_by(Application.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    items = (await session.execute(q)).scalars().all()
+
+    return items, total
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:

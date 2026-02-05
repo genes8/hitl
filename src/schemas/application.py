@@ -21,6 +21,28 @@ class ApplicationCreate(BaseModel):
     source: str = "web"
 
 
+class ApplicationListItem(BaseModel):
+    id: UUID
+    tenant_id: UUID
+
+    external_id: str | None
+    status: str
+
+    submitted_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ApplicationListResponse(BaseModel):
+    items: list[ApplicationListItem]
+    total: int
+    page: int
+    page_size: int
+
+
 class ApplicationRead(BaseModel):
     id: UUID
     tenant_id: UUID

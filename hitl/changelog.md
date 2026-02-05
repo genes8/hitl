@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
+- API: add GET /api/v1/applications listing endpoint with tenant_id scoping, status filter, and simple pagination (+ tests).
 - API: add request ID middleware (X-Request-ID passthrough / generation) + lightweight access logging for easier tracing.
 - DB: add tests for Postgres functions (calculate_queue_priority / get_active_threshold / sync_application_status) and for key schema constraints.
 
