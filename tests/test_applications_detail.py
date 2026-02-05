@@ -136,3 +136,105 @@ def test_get_application_includes_scoring_result_if_exists():
     assert body.get("scoring_result") is not None
     assert body["scoring_result"]["id"] == str(scoring_id)
     assert body["scoring_result"]["application_id"] == application_id
+
+
+def _insert_queue_entry(*, application_id: str) -> uuid.UUID:
+    queue_id = uuid.uuid4()
+
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO analyst_queues (
+                    id,
+                    application_id,
+                    analyst_id,
+                    priority,
+                    priority_reason,
+                    status,
+                    sla_deadline,
+                    sla_breached,
+                    routing_reason,
+                    score_at_routing
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, now() + interval '8 hours', %s, %s, %s
+                )
+                """,
+                (
+                    queue_id,
+                    uuid.UUID(application_id),
+                    None,
+                    10,
+                    "test",
+                    "pending",
+                    False,
+                    "borderline_score",
+                    650,
+                ),
+            )
+        conn.commit()
+
+    return queue_id
+
+
+def _insert_decision(*, application_id: str) -> uuid.UUID:
+    decision_id = uuid.uuid4()
+
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO decisions (
+                    id,
+                    application_id,
+                    scoring_result_id,
+                    analyst_id,
+                    decision_type,
+                    decision_outcome,
+                    approved_terms,
+                    conditions,
+                    reasoning,
+                    reasoning_category,
+                    override_flag,
+                    created_at
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now()
+                )
+                """,
+                (
+                    decision_id,
+                    uuid.UUID(application_id),
+                    None,
+                    None,
+                    "analyst_approve",
+                    "approved",
+                    Json({"amount": 1000}),
+                    Json([]),
+                    "ok",
+                    "standard",
+                    False,
+                ),
+            )
+        conn.commit()
+
+    return decision_id
+
+
+def test_get_application_includes_queue_and_decisions_if_exist():
+    tenant_id = _create_tenant(name="Tenant A")
+    application_id = _create_application(tenant_id=tenant_id)
+
+    queue_id = _insert_queue_entry(application_id=application_id)
+    decision_id = _insert_decision(application_id=application_id)
+
+    client = TestClient(app)
+
+    r = client.get(f"/api/v1/applications/{application_id}")
+    assert r.status_code == 200, r.text
+    body = r.json()
+
+    assert body["queue_entry"] is not None
+    assert body["queue_entry"]["id"] == str(queue_id)
+
+    assert isinstance(body["decision_history"], list)
+    assert body["decision_history"][0]["id"] == str(decision_id)
