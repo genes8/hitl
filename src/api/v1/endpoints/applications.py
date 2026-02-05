@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.application import create_application, get_application
+from src.crud.application import create_application, get_application, list_applications
 from src.database import get_db
-from src.schemas.application import ApplicationCreate, ApplicationRead
+from src.schemas.application import (
+    ApplicationCreate,
+    ApplicationListItem,
+    ApplicationListResponse,
+    ApplicationRead,
+)
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -22,6 +27,37 @@ async def create_application_endpoint(
     # Placeholder until Celery wiring lands.
 
     return ApplicationRead.model_validate(app)
+
+
+@router.get("", response_model=ApplicationListResponse)
+async def list_applications_endpoint(
+    tenant_id: str = Query(..., description="Tenant UUID"),
+    status: str | None = Query(None, description="Application status"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationListResponse:
+    import uuid
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    items, total = await list_applications(
+        session=session,
+        tenant_id=tenant_uuid,
+        status=status,
+        page=page,
+        page_size=page_size,
+    )
+
+    return ApplicationListResponse(
+        items=[ApplicationListItem.model_validate(i) for i in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/{application_id}", response_model=ApplicationRead)
