@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- DB/CI: update migration 004 down_revision to renamed 003 id.
+
+- DB: fix SQLAlchemy reserved attribute `metadata` in ModelRegistry model (renamed to `meta`).
+
+- DB: added model_registry, similar_cases, notifications, loan_outcomes (migration 004).
 - DB/CI: fixed Alembic revision id length (kept <= 32 chars) to avoid alembic_version truncation errors.
 
 - DB/CI: fix SQLAlchemy reserved attribute `metadata` in Application model (renamed to `meta`).
