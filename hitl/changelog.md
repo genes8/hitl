@@ -7,6 +7,7 @@
 - API: application detail now includes latest scoring_result when available.
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
+- DB: added partial indexes for analyst_queues queue listing + SLA tracking (idx_queue_priority, idx_queue_sla).
 
 - DB: added DB functions calculate_queue_priority() and get_active_threshold().
 
