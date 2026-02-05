@@ -4,6 +4,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 
+from src.api.errors import register_exception_handlers
 from src.api.v1.router import router as v1_router
 
 logger = logging.getLogger("hitl.api")
@@ -11,6 +12,8 @@ logger = logging.getLogger("hitl.api")
 
 def create_app() -> FastAPI:
     app = FastAPI(title="HITL Credit Approval System API")
+
+    register_exception_handlers(app)
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):
@@ -23,6 +26,8 @@ def create_app() -> FastAPI:
         """
 
         request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
+        request.state.request_id = request_id
+
         start = time.perf_counter()
         response = await call_next(request)
         duration_ms = (time.perf_counter() - start) * 1000

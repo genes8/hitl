@@ -149,7 +149,7 @@ Tasks:
 - [x] Set up structured logging with request context (lightweight access logging in middleware)
 - [x] Configure CORS middleware (configurable origins)
 - [x] Create health check endpoint: GET /health
-- [ ] Create global exception handlers (400, 401, 403, 404, 500)
+- [x] Create global exception handlers (400, 401, 403, 404, 500)
 - [x] Create request ID middleware
 - [x] Configure OpenAPI documentation (/docs, /redoc) (FastAPI defaults)
 - [ ] Write pytest configuration (conftest.py)
