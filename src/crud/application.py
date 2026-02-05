@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
 from src.models.audit_log import AuditLog
+from src.models.scoring_result import ScoringResult
 from src.schemas.application import ApplicationCreate
 
 
@@ -70,6 +71,20 @@ async def list_applications(
         page_size = 100
 
     base = select(Application).where(Application.tenant_id == tenant_id)
+
+    score_subq = None
+    if sort_by == "score":
+        # There may be multiple scoring results over time; list view sorts by the
+        # latest/highest score we have for the application (v0: max(score)).
+        score_subq = (
+            select(
+                ScoringResult.application_id.label("app_id"),
+                func.max(ScoringResult.score).label("score"),
+            )
+            .group_by(ScoringResult.application_id)
+            .subquery()
+        )
+        base = base.outerjoin(score_subq, score_subq.c.app_id == Application.id)
     if status:
         base = base.where(Application.status == status)
 
@@ -102,13 +117,19 @@ async def list_applications(
     elif sort_by == "amount":
         # loan_request is JSONB; cast loan_amount to numeric for sorting.
         order_expr = Application.loan_request["loan_amount"].astext.cast(sa.Numeric)
+    elif sort_by == "score":
+        # Joined via score_subq above.
+        order_expr = (score_subq.c.score if score_subq is not None else None)
     else:
         order_expr = Application.created_at
 
+    if order_expr is None:
+        order_expr = Application.created_at
+
     if sort_order == "asc":
-        order_expr = order_expr.asc()
+        order_expr = sa.nulls_last(order_expr.asc())
     else:
-        order_expr = order_expr.desc()
+        order_expr = sa.nulls_last(order_expr.desc())
 
     q = base.order_by(order_expr).offset((page - 1) * page_size).limit(page_size)
     items = (await session.execute(q)).scalars().all()

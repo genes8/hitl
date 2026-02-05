@@ -175,3 +175,80 @@ def test_list_applications_sorts_by_amount():
 
     ids = [i["id"] for i in r.json()["items"]]
     assert ids == [low_id, high_id]
+
+
+def test_list_applications_sorts_by_score_desc_with_nulls_last():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    a_low = _create_application(client, tenant_id=tenant_id, applicant_name="LowScore")
+    a_high = _create_application(client, tenant_id=tenant_id, applicant_name="HighScore")
+    a_none = _create_application(client, tenant_id=tenant_id, applicant_name="NoScore")
+
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO scoring_results (
+                  id, application_id, model_id, model_version,
+                  score, probability_default, risk_category, routing_decision,
+                  threshold_config_id, features, shap_values, top_factors,
+                  scoring_time_ms
+                ) VALUES (
+                  %s, %s, %s, %s,
+                  %s, %s, %s, %s,
+                  NULL, %s::jsonb, %s::jsonb, %s::jsonb,
+                  %s
+                )
+                """,
+                (
+                    uuid.uuid4(),
+                    a_low,
+                    "demo",
+                    "v1",
+                    450,
+                    0.1234,
+                    "medium",
+                    "human_review",
+                    "{}",
+                    "{}",
+                    "{}",
+                    42,
+                ),
+            )
+            cur.execute(
+                """
+                INSERT INTO scoring_results (
+                  id, application_id, model_id, model_version,
+                  score, probability_default, risk_category, routing_decision,
+                  threshold_config_id, features, shap_values, top_factors,
+                  scoring_time_ms
+                ) VALUES (
+                  %s, %s, %s, %s,
+                  %s, %s, %s, %s,
+                  NULL, %s::jsonb, %s::jsonb, %s::jsonb,
+                  %s
+                )
+                """,
+                (
+                    uuid.uuid4(),
+                    a_high,
+                    "demo",
+                    "v1",
+                    900,
+                    0.0100,
+                    "low",
+                    "auto_approve",
+                    "{}",
+                    "{}",
+                    "{}",
+                    42,
+                ),
+            )
+        conn.commit()
+
+    r = client.get(f"/api/v1/applications?tenant_id={tenant_id}&sort_by=score&sort_order=desc")
+    assert r.status_code == 200, r.text
+
+    ids = [i["id"] for i in r.json()["items"]]
+    assert ids[:3] == [a_high, a_low, a_none]

@@ -4,6 +4,7 @@
 
 - API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
 - API: validate from_date <= to_date and validate sort_by/sort_order (422).
+- API: add sort_by=score option to GET /api/v1/applications (NULL scores last) (+ tests).
 
 - API: add from_date/to_date filters to GET /api/v1/applications (+ tests).
 
