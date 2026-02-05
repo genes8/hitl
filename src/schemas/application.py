@@ -24,6 +24,19 @@ class ApplicationCreate(BaseModel):
     source: str = "web"
 
 
+class ApplicationUpdate(BaseModel):
+    # NOTE: Updates are restricted in the endpoint logic (see api/v1/endpoints/applications.py).
+    external_id: str | None = None
+    status: str | None = None
+
+    applicant_data: dict[str, Any] | None = None
+    financial_data: dict[str, Any] | None = None
+    loan_request: dict[str, Any] | None = None
+    credit_bureau_data: dict[str, Any] | None = None
+
+    source: str | None = None
+
+
 class ApplicationRead(BaseModel):
     id: UUID
     tenant_id: UUID

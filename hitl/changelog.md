@@ -6,6 +6,8 @@
 - API: application detail now includes latest scoring_result when present + tests.
 - API: application detail now includes latest queue_info + decision_history when present + tests.
 - API: application detail now includes similar_cases when present + tests.
+- API: added PATCH /api/v1/applications/{id} with status transition validation + pending-only field updates + tests.
+- API: added DELETE /api/v1/applications/{id} (sets status=cancelled) + tests.
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 

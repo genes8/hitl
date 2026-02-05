@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
 from src.models.audit_log import AuditLog
-from src.schemas.application import ApplicationCreate
+from src.schemas.application import ApplicationCreate, ApplicationUpdate
 
 
 def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
@@ -90,6 +90,81 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
             "meta": {"derived": derived},
         },
         change_summary="application created",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(app)
+    return app
+
+
+async def update_application(
+    session: AsyncSession,
+    *,
+    app: Application,
+    obj_in: ApplicationUpdate,
+) -> Application:
+    old_value = {
+        "external_id": app.external_id,
+        "status": app.status,
+        "applicant_data": app.applicant_data,
+        "financial_data": app.financial_data,
+        "loan_request": app.loan_request,
+        "credit_bureau_data": app.credit_bureau_data,
+        "source": app.source,
+        "meta": app.meta,
+    }
+
+    if obj_in.external_id is not None:
+        app.external_id = obj_in.external_id
+
+    if obj_in.status is not None:
+        app.status = obj_in.status
+
+    if obj_in.applicant_data is not None:
+        app.applicant_data = obj_in.applicant_data
+
+    if obj_in.financial_data is not None:
+        app.financial_data = obj_in.financial_data
+
+    if obj_in.loan_request is not None:
+        app.loan_request = obj_in.loan_request
+
+    if obj_in.credit_bureau_data is not None:
+        app.credit_bureau_data = obj_in.credit_bureau_data
+
+    if obj_in.source is not None:
+        app.source = obj_in.source
+
+    # Keep derived fields in sync when the inputs change.
+    if obj_in.financial_data is not None or obj_in.loan_request is not None:
+        derived = _compute_derived(app.financial_data, app.loan_request)
+        meta = dict(app.meta or {})
+        meta["derived"] = derived
+        app.meta = meta
+
+    app.updated_at = datetime.now(timezone.utc)
+
+    new_value = {
+        "external_id": app.external_id,
+        "status": app.status,
+        "applicant_data": app.applicant_data,
+        "financial_data": app.financial_data,
+        "loan_request": app.loan_request,
+        "credit_bureau_data": app.credit_bureau_data,
+        "source": app.source,
+        "meta": app.meta,
+    }
+
+    audit = AuditLog(
+        tenant_id=app.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=app.id,
+        action="update",
+        old_value=old_value,
+        new_value=new_value,
+        change_summary="application updated",
     )
     session.add(audit)
 
