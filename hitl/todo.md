@@ -488,7 +488,7 @@ Tasks:
 - [x] Include queue_info (if in queue)
 - [x] Include decision_history (all decisions)
 - [x] Include similar_cases (if available)
-- [ ] Create PATCH /applications/{id} endpoint
+- [x] Create PATCH /applications/{id} endpoint
 - [ ] Validate status transitions:
   - [ ] pending -> cancelled ✓
   - [ ] pending -> scoring ✓ (internal only)

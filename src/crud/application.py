@@ -13,7 +13,7 @@ from src.models.audit_log import AuditLog
 from src.models.decision import Decision
 from src.models.scoring_result import ScoringResult
 from src.models.similar_case import SimilarCase
-from src.schemas.application import ApplicationCreate
+from src.schemas.application import ApplicationCreate, ApplicationUpdate
 
 
 def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
@@ -253,6 +253,91 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
             "meta": {"derived": derived},
         },
         change_summary="application created",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(app)
+    return app
+
+
+async def update_application(
+    session: AsyncSession,
+    *,
+    application_id,
+    tenant_id=None,
+    obj_in: ApplicationUpdate,
+) -> Application | None:
+    app = await get_application(session=session, application_id=application_id, tenant_id=tenant_id)
+    if app is None:
+        return None
+
+    if app.status != "pending":
+        # v1: only pending applications are editable.
+        return app
+
+    updates: dict[str, object] = {}
+
+    if obj_in.external_id is not None:
+        app.external_id = obj_in.external_id
+        updates["external_id"] = obj_in.external_id
+
+    if obj_in.applicant_data is not None:
+        app.applicant_data = obj_in.applicant_data
+        updates["applicant_data"] = obj_in.applicant_data
+
+    financial_changed = False
+    loan_changed = False
+
+    if obj_in.financial_data is not None:
+        app.financial_data = obj_in.financial_data
+        updates["financial_data"] = obj_in.financial_data
+        financial_changed = True
+
+    if obj_in.loan_request is not None:
+        app.loan_request = obj_in.loan_request
+        updates["loan_request"] = obj_in.loan_request
+        loan_changed = True
+
+    if obj_in.credit_bureau_data is not None:
+        app.credit_bureau_data = obj_in.credit_bureau_data
+        updates["credit_bureau_data"] = obj_in.credit_bureau_data
+
+    if obj_in.source is not None:
+        app.source = obj_in.source
+        updates["source"] = obj_in.source
+
+    status_change = None
+    if obj_in.status is not None and obj_in.status != app.status:
+        status_change = obj_in.status
+
+    if status_change is not None:
+        if status_change != "cancelled":
+            # Keep behavior explicit: only allow cancel via PATCH in v1.
+            return app
+        updates["status"] = "cancelled"
+        app.status = "cancelled"
+
+    if financial_changed or loan_changed:
+        derived = _compute_derived(app.financial_data, app.loan_request)
+        meta = dict(app.meta or {})
+        meta["derived"] = derived
+        app.meta = meta
+        updates["meta"] = {"derived": derived}
+
+    if not updates:
+        # Nothing to do.
+        return app
+
+    audit = AuditLog(
+        tenant_id=app.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=app.id,
+        action="update",
+        old_value=None,
+        new_value=updates,
+        change_summary="application updated",
     )
     session.add(audit)
 

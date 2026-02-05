@@ -65,6 +65,22 @@ class ApplicationCreate(BaseModel):
         return self
 
 
+class ApplicationUpdate(BaseModel):
+    # v1: only allow editing pending applications.
+    external_id: str | None = None
+
+    applicant_data: dict[str, Any] | None = None
+    financial_data: dict[str, Any] | None = None
+    loan_request: dict[str, Any] | None = None
+    credit_bureau_data: dict[str, Any] | None = None
+
+    source: str | None = None
+
+    # Status transitions are restricted in the endpoint; this field exists so the
+    # API can evolve without a schema change.
+    status: str | None = None
+
+
 class ApplicationListItem(BaseModel):
     id: UUID
     tenant_id: UUID

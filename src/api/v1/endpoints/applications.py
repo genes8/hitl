@@ -14,6 +14,7 @@ from src.crud.application import (
     list_applications,
     list_decisions,
     list_similar_cases,
+    update_application,
 )
 from src.database import get_db
 from src.schemas.application import (
@@ -21,6 +22,7 @@ from src.schemas.application import (
     ApplicationListItem,
     ApplicationListResponse,
     ApplicationRead,
+    ApplicationUpdate,
 )
 from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.decision import DecisionRead
@@ -131,6 +133,63 @@ async def get_application_endpoint(
     payload["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
 
     return ApplicationRead(**payload)
+
+
+@router.patch("/{application_id}", response_model=ApplicationRead)
+async def update_application_endpoint(
+    application_id: str,
+    payload: ApplicationUpdate,
+    tenant_id: str | None = Query(None, description="Optional tenant UUID to enforce isolation"),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    tenant_uuid = None
+    if tenant_id is not None:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    # Fetch first to allow clear status-based errors.
+    app = await get_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if app.status != "pending":
+        raise HTTPException(status_code=409, detail="Application cannot be updated")
+
+    updated = await update_application(
+        session=session,
+        application_id=app_id,
+        tenant_id=tenant_uuid,
+        obj_in=payload,
+    )
+
+    # Should only happen if the record vanished between calls.
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if payload.status is not None and payload.status != "cancelled" and updated.status == "pending":
+        raise HTTPException(status_code=409, detail="Invalid status transition")
+
+    scoring = await get_latest_scoring_result(session=session, application_id=updated.id)
+    queue_entry = await get_latest_queue_entry(session=session, application_id=updated.id)
+    decisions = await list_decisions(session=session, application_id=updated.id)
+    similar_cases = await list_similar_cases(session=session, application_id=updated.id)
+
+    resp = ApplicationRead.model_validate(updated).model_dump()
+    resp["scoring_result"] = ScoringResultRead.model_validate(scoring).model_dump() if scoring else None
+    resp["queue_info"] = AnalystQueueRead.model_validate(queue_entry).model_dump() if queue_entry else None
+    resp["decision_history"] = [DecisionRead.model_validate(d).model_dump() for d in decisions]
+    resp["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
+
+    return ApplicationRead(**resp)
 
 
 @router.delete("/{application_id}", response_model=ApplicationRead)
