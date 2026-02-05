@@ -51,6 +51,8 @@ async def list_applications(
     *,
     tenant_id,
     status: str | None = None,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Application], int]:
@@ -66,6 +68,17 @@ async def list_applications(
     base = select(Application).where(Application.tenant_id == tenant_id)
     if status:
         base = base.where(Application.status == status)
+
+    # If caller provided naive datetimes, assume UTC.
+    if from_date is not None and from_date.tzinfo is None:
+        from_date = from_date.replace(tzinfo=timezone.utc)
+    if to_date is not None and to_date.tzinfo is None:
+        to_date = to_date.replace(tzinfo=timezone.utc)
+
+    if from_date is not None:
+        base = base.where(Application.created_at >= from_date)
+    if to_date is not None:
+        base = base.where(Application.created_at <= to_date)
 
     # total count
     count_q = select(func.count()).select_from(base.subquery())
