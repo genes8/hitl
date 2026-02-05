@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.application import create_application, get_application
+from src.crud.scoring_result import get_latest_scoring_result_for_application
 from src.database import get_db
 from src.schemas.application import ApplicationCreate, ApplicationRead
 
@@ -40,5 +41,9 @@ async def get_application_endpoint(
 
     if app is None:
         raise HTTPException(status_code=404, detail="application not found")
+
+    scoring = await get_latest_scoring_result_for_application(session, application_id=app.id)
+    # Attach dynamically so the existing Application model doesn't need ORM relationships yet.
+    setattr(app, "scoring_result", scoring)
 
     return ApplicationRead.model_validate(app)
