@@ -499,7 +499,7 @@ Tasks:
   - [x] review -> declined ✓
   - [x] [others blocked]
 - [x] Only allow field updates on pending applications
-- [ ] Create DELETE /applications/{id} endpoint (sets status = cancelled)
+- [x] Create DELETE /applications/{id} endpoint (sets status = cancelled)
 - [ ] Test: Detail includes all related data
 - [x] Test: Invalid transitions blocked
 - [x] Test: Cancel works

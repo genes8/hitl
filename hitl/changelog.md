@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- API: add DELETE /api/v1/applications/{id} to cancel applications (soft-delete via status=cancelled) (+ tests).
 - API: add PATCH /api/v1/applications/{id} with status transition validation and pending-only edits (+ tests).
 - API: GET /api/v1/applications/{id} now includes similar_cases when available (+ test).
 - API: GET /api/v1/applications/{id} now includes decision_history when decisions exist (+ test).

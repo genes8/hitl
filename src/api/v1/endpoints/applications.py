@@ -235,3 +235,40 @@ async def patch_application_endpoint(
 
     updated = await update_application(session=session, db_obj=app, obj_in=payload)
     return ApplicationRead.model_validate(updated)
+
+
+@router.delete("/{application_id}", response_model=ApplicationRead)
+async def cancel_application_endpoint(
+    application_id: str,
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    """Cancel an application (soft-delete).
+
+    Spec (hitl/todo.md TODO-2.1.3): DELETE /applications/{id} sets status=cancelled.
+    """
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    app = await get_application(session=session, application_id=app_id)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if app.status == "cancelled":
+        return ApplicationRead.model_validate(app)
+
+    if app.status != "pending":
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid status transition: {app.status} -> cancelled",
+        )
+
+    updated = await update_application(
+        session=session,
+        db_obj=app,
+        obj_in=ApplicationUpdate(status="cancelled"),
+    )
+    return ApplicationRead.model_validate(updated)
