@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.scoring_result import ScoringResultRead
 
 
@@ -37,6 +38,7 @@ class ApplicationRead(BaseModel):
     meta: dict[str, Any] = Field(default_factory=dict)
 
     scoring_result: ScoringResultRead | None = None
+    queue_info: AnalystQueueRead | None = None
 
     submitted_at: datetime
     expires_at: datetime | None

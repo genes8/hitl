@@ -4,6 +4,7 @@
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 - API: added GET /api/v1/applications (list) with tenant/status/date/search filters + pagination.
+- API: added queue_info to GET /api/v1/applications/{id} when an analyst queue entry exists.
 - Schemas: add missing `ScoringResultRead` schema (fixes API import / response typing).
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).

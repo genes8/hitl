@@ -10,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud import BaseCRUD
 from src.crud.application import create_application
 from src.database import get_db
+from src.models.analyst_queue import AnalystQueue
 from src.models.application import Application
 from src.models.scoring_result import ScoringResult
+from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.application import ApplicationCreate, ApplicationListResponse, ApplicationRead
 from src.schemas.scoring_result import ScoringResultRead
 
@@ -119,6 +121,16 @@ async def get_application_endpoint(
     scoring_result = (await session.execute(scoring_stmt)).scalar_one_or_none()
     if scoring_result is not None:
         app_read.scoring_result = ScoringResultRead.model_validate(scoring_result)
+
+    queue_stmt = (
+        select(AnalystQueue)
+        .where(AnalystQueue.application_id == application_id)
+        .order_by(AnalystQueue.created_at.desc())
+        .limit(1)
+    )
+    queue_row = (await session.execute(queue_stmt)).scalar_one_or_none()
+    if queue_row is not None:
+        app_read.queue_info = AnalystQueueRead.model_validate(queue_row)
 
     return app_read
 
