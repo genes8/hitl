@@ -4,6 +4,10 @@
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 
+- API (Phase 2 partial): Queue listing + summary endpoints:
+  - `GET /api/v1/queue` (filters + sorting + pagination)
+  - `GET /api/v1/queue/summary` (SQL aggregation for SLA metrics + priority buckets)
+
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
 
 - DB: added DB functions calculate_queue_priority() and get_active_threshold().

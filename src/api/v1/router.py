@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from src.api.v1.endpoints.applications import router as applications_router
+from src.api.v1.endpoints.queue import router as queue_router
 
 router = APIRouter()
 
@@ -11,3 +12,4 @@ async def ping():
 
 
 router.include_router(applications_router)
+router.include_router(queue_router)
