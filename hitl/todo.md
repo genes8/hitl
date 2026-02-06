@@ -145,7 +145,7 @@ Tasks:
 - [ ] Configure Pydantic Settings (BaseSettings class)
 - [ ] Set up SQLAlchemy async engine
 - [ ] Create async session dependency
-- [ ] Create base CRUD class with generic methods
+- [x] Create base CRUD class with generic methods
 - [ ] Set up structured logging with request context
 - [ ] Configure CORS middleware (configurable origins)
 - [x] Create health check endpoint: GET /health
