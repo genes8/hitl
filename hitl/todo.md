@@ -32,7 +32,7 @@ Estimated Hours: 16
 Can be parallelized: No
 
 Tasks:
-- [ ] Create project directory structure:
+- [x] Create project directory structure:
 
   ```text
   /
@@ -49,15 +49,15 @@ Tasks:
   └── .env.example
   ```
 
-- [ ] Write base Dockerfile for backend (Python 3.11, FastAPI)
-- [ ] Write Dockerfile for ML service (Python 3.11, scikit-learn, XGBoost)
-- [ ] Write Dockerfile for frontend (Node 20, multi-stage build)
+- [x] Write base Dockerfile for backend (Python 3.11, FastAPI)
+- [x] Write Dockerfile for ML service (Python 3.11, scikit-learn, XGBoost) (placeholder)
+- [x] Write Dockerfile for frontend (Node 20, multi-stage build) (placeholder)
 - [ ] Create docker-compose.yml with services: postgres, redis, api, ml-service, worker, scheduler, frontend, traefik, prometheus, grafana
 - [ ] Configure PostgreSQL with health checks
 - [ ] Configure Redis with persistence
 - [ ] Set up Traefik reverse proxy with auto-SSL
-- [ ] Create .env.example with all environment variables
-- [ ] Create docker-compose.override.yml for dev (volume mounts, hot reload)
+- [x] Create .env.example with all environment variables (initial)
+- [x] Create docker-compose.override.yml for dev (volume mounts, hot reload)
 - [ ] Test: docker-compose up starts all services
 - [ ] Test: All health checks pass
 - [ ] Document Docker setup in README.md
@@ -77,32 +77,32 @@ Estimated Hours: 24
 Can be parallelized: No
 
 Tasks:
-- [ ] Initialize Alembic migration framework
-- [ ] Create migration: 001_create_tenants.py
-- [ ] Create migration: 002_create_users.py
-- [ ] Create migration: 003_create_applications.py
-- [ ] Create migration: 004_create_scoring_results.py
-- [ ] Create migration: 005_create_analyst_queues.py
-- [ ] Create migration: 006_create_decisions.py
-- [ ] Create migration: 007_create_decision_thresholds.py
-- [ ] Create migration: 008_create_audit_logs.py
-- [ ] Create migration: 009_create_model_registry.py
-- [ ] Create migration: 010_create_similar_cases.py
-- [ ] Create migration: 011_create_notifications.py
-- [ ] Create migration: 012_create_loan_outcomes.py
+- [x] Initialize Alembic migration framework
+- [x] Create migration: 001_create_tenants.py (included in 001_create_tenants_users)
+- [x] Create migration: 002_create_users.py (included in 001_create_tenants_users)
+- [x] Create migration: 003_create_applications.py (in 002_create_core_tables)
+- [x] Create migration: 004_create_scoring_results.py (in 002_create_core_tables)
+- [x] Create migration: 005_create_analyst_queues.py (in 002_create_core_tables)
+- [x] Create migration: 006_create_decisions.py (in 002_create_core_tables)
+- [x] Create migration: 007_create_decision_thresholds.py (in 003_thresholds_audit_and_triggers)
+- [x] Create migration: 008_create_audit_logs.py (in 003_thresholds_audit_and_triggers)
+- [x] Create migration: 009_create_model_registry.py (in 004_remaining_tables)
+- [x] Create migration: 010_create_similar_cases.py (in 004_remaining_tables)
+- [x] Create migration: 011_create_notifications.py (in 004_remaining_tables)
+- [x] Create migration: 012_create_loan_outcomes.py (in 004_remaining_tables)
 - [ ] Create all indexes as specified in PRD
-- [ ] Create trigger: update_updated_at_column()
-- [ ] Apply trigger to all tables with updated_at
-- [ ] Create function: sync_application_status()
-- [ ] Create function: calculate_queue_priority()
-- [ ] Create function: get_active_threshold()
-- [ ] Create view: v_daily_decision_summary
-- [ ] Create view: v_analyst_performance
-- [ ] Create view: v_queue_metrics
-- [ ] Write seed data script for development
-- [ ] Test: All migrations run successfully (up/down)
-- [ ] Test: Constraints work correctly
-- [ ] Test: Functions return expected results
+- [x] Create trigger: update_updated_at_column()
+- [x] Apply trigger to all tables with updated_at (tenants/users/applications/analyst_queues/decision_thresholds)
+- [x] Create function: sync_application_status()
+- [x] Create function: calculate_queue_priority()
+- [x] Create function: get_active_threshold()
+- [x] Create view: v_daily_decision_summary
+- [x] Create view: v_analyst_performance
+- [x] Create view: v_queue_metrics
+- [x] Write seed data script for development
+- [x] Test: All migrations run successfully (up/down) (CI smoke test)
+- [x] Test: Constraints work correctly
+- [x] Test: Functions return expected results
 
 Definition of Done:
 - Database schema matches PRD specification
@@ -119,8 +119,8 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-1.1.2)
 
 Tasks:
-- [ ] Initialize project with Poetry (pyproject.toml)
-- [ ] Create src/ directory structure:
+- [x] Initialize project with Poetry (pyproject.toml) (minimal pyproject scaffold)
+- [x] Create src/ directory structure:
 
   ```text
   src/
@@ -142,21 +142,21 @@ Tasks:
   └── utils/
   ```
 
-- [ ] Configure Pydantic Settings (BaseSettings class)
-- [ ] Set up SQLAlchemy async engine
-- [ ] Create async session dependency
+- [x] Configure Pydantic Settings (BaseSettings class)
+- [x] Set up SQLAlchemy async engine
+- [x] Create async session dependency
 - [ ] Create base CRUD class with generic methods
-- [ ] Set up structured logging with request context
-- [ ] Configure CORS middleware (configurable origins)
-- [ ] Create health check endpoint: GET /health
+- [x] Set up structured logging with request context (lightweight access logging in middleware)
+- [x] Configure CORS middleware (configurable origins)
+- [x] Create health check endpoint: GET /health
 - [ ] Create global exception handlers (400, 401, 403, 404, 500)
-- [ ] Create request ID middleware
-- [ ] Configure OpenAPI documentation (/docs, /redoc)
+- [x] Create request ID middleware
+- [x] Configure OpenAPI documentation (/docs, /redoc) (FastAPI defaults)
 - [ ] Write pytest configuration (conftest.py)
-- [ ] Write first test: test_health_check
-- [ ] Test: Server starts without errors
-- [ ] Test: /health returns 200
-- [ ] Test: /docs accessible
+- [x] Write first test: test_health_check
+- [x] Test: Server starts without errors (CI)
+- [x] Test: /health returns 200
+- [x] Test: /docs accessible (FastAPI defaults)
 
 Definition of Done:
 - FastAPI server runs
@@ -421,23 +421,23 @@ Estimated Hours: 24
 Can be parallelized: No
 
 Tasks:
-- [ ] Create POST /applications endpoint
-- [ ] Validate required fields in applicant_data
-- [ ] Validate required fields in financial_data
-- [ ] Validate loan_request fields
-- [ ] Calculate derived fields:
-  - [ ] dti_ratio = (monthly_obligations + existing_loans_payment) / net_monthly_income
-  - [ ] loan_to_income = loan_amount / (net_monthly_income * 12)
-  - [ ] payment_to_income = estimated_payment / net_monthly_income
-- [ ] Set initial status = ‘pending’
-- [ ] Generate external_id if not provided
-- [ ] Set expires_at (default: 30 days)
-- [ ] Emit Celery task: score_application
-- [ ] Create audit log entry
-- [ ] Return 201 with application ID
-- [ ] Test: Valid application created
-- [ ] Test: Validation errors return 422
-- [ ] Test: Derived fields calculated correctly
+- [x] Create POST /applications endpoint
+- [x] Validate required fields in applicant_data
+- [x] Validate required fields in financial_data
+- [x] Validate loan_request fields
+- [x] Calculate derived fields:
+  - [x] dti_ratio = (monthly_obligations + existing_loans_payment) / net_monthly_income
+  - [x] loan_to_income = loan_amount / (net_monthly_income * 12)
+  - [x] payment_to_income = estimated_payment / net_monthly_income
+- [x] Set initial status = ‘pending’
+- [x] Generate external_id if not provided
+- [x] Set expires_at (default: 30 days)
+- [x] Emit Celery task: score_application
+- [x] Create audit log entry
+- [x] Return 201 with application ID
+- [x] Test: Valid application created
+- [x] Test: Validation errors return 422
+- [x] Test: Derived fields calculated correctly
 
 Definition of Done:
 - Applications can be created via API
@@ -453,21 +453,21 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.3)
 
 Tasks:
-- [ ] Create GET /applications endpoint
+- [x] Create GET /applications endpoint
 - [ ] Implement query parameters:
-  - [ ] status: string (pending, scoring, review, approved, declined)
-  - [ ] from_date: datetime
-  - [ ] to_date: datetime
-  - [ ] search: string (external_id, applicant name)
-  - [ ] sort_by: string (created_at, amount, score)
-  - [ ] sort_order: asc | desc
-  - [ ] page: int (default 1)
-  - [ ] page_size: int (default 20, max 100)
+  - [x] status: string (pending, scoring, review, approved, declined)
+  - [x] from_date: datetime
+  - [x] to_date: datetime
+  - [x] search: string (external_id, applicant name)
+  - [x] sort_by: string (created_at, amount, score)
+  - [x] sort_order: asc | desc
+  - [x] page: int (default 1)
+  - [x] page_size: int (default 20, max 100)
 - [ ] Implement cursor pagination option
 - [ ] Optimize query with proper indexes
-- [ ] Return paginated response with total count
-- [ ] Test: Filters work correctly
-- [ ] Test: Pagination returns correct pages
+- [x] Return paginated response with total count
+- [x] Test: Filters work correctly
+- [x] Test: Pagination returns correct pages
 - [ ] Test: Response time < 100ms for 10k records
 
 Definition of Done:
@@ -483,8 +483,8 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.2)
 
 Tasks:
-- [ ] Create GET /applications/{id} endpoint
-- [ ] Include scoring_result (if exists)
+- [x] Create GET /applications/{id} endpoint
+- [x] Include scoring_result (if exists)
 - [ ] Include queue_info (if in queue)
 - [ ] Include decision_history (all decisions)
 - [ ] Include similar_cases (if available)
@@ -1795,7 +1795,7 @@ Estimated Hours: 16
 Can be parallelized: No
 
 Tasks:
-- [ ] Configure GitHub Actions (or GitLab CI)
+- [x] Configure GitHub Actions (or GitLab CI) (basic CI: migrations + pytest)
 - [ ] Create build pipeline:
   - Build Docker images
   - Run linting
