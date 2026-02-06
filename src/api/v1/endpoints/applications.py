@@ -32,7 +32,11 @@ async def create_application_endpoint(
     app = await create_application(session=session, obj_in=payload)
 
     # TODO-2.1.1: Emit Celery task score_application(app.id)
-    # Placeholder until Celery wiring lands.
+    # We call a small dispatcher shim so we don't need Celery installed until
+    # TODO-2.4.1 lands.
+    from src.worker.dispatch import enqueue_score_application
+
+    enqueue_score_application(application_id=app.id)
 
     return ApplicationRead.model_validate(app)
 

@@ -25,8 +25,18 @@ def _create_tenant() -> uuid.UUID:
     return tenant_id
 
 
-def test_create_application_201_and_derives_ratios():
+def test_create_application_201_and_derives_ratios(monkeypatch):
     tenant_id = _create_tenant()
+
+    # Ensure we trigger the scoring enqueue hook on intake.
+    called = {"application_id": None}
+
+    from src.worker import dispatch
+
+    def _fake_enqueue_score_application(*, application_id):
+        called["application_id"] = application_id
+
+    monkeypatch.setattr(dispatch, "enqueue_score_application", _fake_enqueue_score_application)
 
     client = TestClient(app)
 
@@ -59,6 +69,9 @@ def test_create_application_201_and_derives_ratios():
     assert derived["dti_ratio"] == 0.3
     assert derived["loan_to_income"] == 1.0
     assert derived["payment_to_income"] == 0.3
+
+    # The dispatcher should have been invoked with the created application id.
+    assert called["application_id"] == uuid.UUID(data["id"])
 
 
 def test_create_application_422_when_missing_required_fields():
