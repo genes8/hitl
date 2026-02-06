@@ -22,6 +22,7 @@
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 - API: added GET /api/v1/applications/{id} (detail) with optional tenant scoping via `tenant_id` query param; includes latest scoring_result when present.
+- API: include latest queue_info (analyst_queue entry) in GET /api/v1/applications/{id} when present (+ tests).
 - API: validate POST /api/v1/applications required fields (applicant_data/financial_data/loan_request) + tests.
 
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).

@@ -25,6 +25,40 @@ def _create_tenant() -> uuid.UUID:
     return tenant_id
 
 
+def _insert_queue_entry(*, application_id: uuid.UUID) -> uuid.UUID:
+    queue_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO analyst_queues (
+                  id,
+                  application_id,
+                  analyst_id,
+                  priority,
+                  status,
+                  sla_deadline,
+                  sla_breached,
+                  routing_reason,
+                  score_at_routing
+                )
+                VALUES (%s,%s,%s,%s,%s, now() + interval '8 hours', %s, %s, %s)
+                """,
+                (
+                    queue_id,
+                    application_id,
+                    None,
+                    42,
+                    "pending",
+                    False,
+                    "borderline_score",
+                    650,
+                ),
+            )
+        conn.commit()
+    return queue_id
+
+
 def _insert_scoring_result(*, application_id: uuid.UUID) -> uuid.UUID:
     scoring_id = uuid.uuid4()
     with psycopg.connect(_sync_dsn()) as conn:
@@ -96,6 +130,43 @@ def test_get_application_200_after_create():
     assert r.json()["id"] == app_id
     assert r.json()["tenant_id"] == str(tenant_id)
     assert r.json()["scoring_result"] is None
+
+
+def test_get_application_includes_queue_info_when_exists():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+    queue_id = _insert_queue_entry(application_id=app_id)
+
+    r = client.get(f"/api/v1/applications/{app_id}")
+    assert r.status_code == 200, r.text
+
+    queue_info = r.json()["queue_info"]
+    assert queue_info is not None
+    assert queue_info["id"] == str(queue_id)
+    assert queue_info["application_id"] == str(app_id)
+    assert queue_info["status"] == "pending"
+    assert queue_info["priority"] == 42
+    assert queue_info["routing_reason"] == "borderline_score"
+    assert queue_info["score_at_routing"] == 650
 
 
 def test_get_application_includes_scoring_result_when_exists():
