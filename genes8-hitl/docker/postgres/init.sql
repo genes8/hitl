@@ -1,0 +1,1 @@
+-- Placeholder. DB schema is managed via Alembic migrations.

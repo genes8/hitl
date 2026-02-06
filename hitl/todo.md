@@ -82,6 +82,7 @@ Estimated Hours: 24
 Can be parallelized: No
 
 Tasks:
+- [x] Implemented initial Alembic framework + schema/functions/views in `genes8-hitl/` (migrations 001-008)
 - [ ] Initialize Alembic migration framework
 - [ ] Create migration: 001_create_tenants.py
 - [ ] Create migration: 002_create_users.py
@@ -124,6 +125,7 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-1.1.2)
 
 Tasks:
+- [x] Implemented initial FastAPI project skeleton in `genes8-hitl/` (pyproject.toml + `src/` + `/health` + tests)
 - [ ] Initialize project with Poetry (pyproject.toml)
 - [ ] Create src/ directory structure:
 
