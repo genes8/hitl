@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- API: add cursor pagination option to GET /api/v1/applications (created_at sort) (+ tests).
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
 - API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
 - API: validate from_date <= to_date and validate sort_by/sort_order (422).

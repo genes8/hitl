@@ -80,8 +80,14 @@ class ApplicationListItem(BaseModel):
 class ApplicationListResponse(BaseModel):
     items: list[ApplicationListItem]
     total: int
+
+    # Offset-based pagination (default).
     page: int
     page_size: int
+
+    # Cursor-based pagination (optional). When provided, clients can request the next page
+    # by passing `cursor=<next_cursor>` back to the listing endpoint.
+    next_cursor: str | None = None
 
 
 class ApplicationRead(BaseModel):

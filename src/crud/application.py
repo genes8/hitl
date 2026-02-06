@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import func, select
@@ -80,7 +81,8 @@ async def list_applications(
     sort_order: str = "desc",
     page: int = 1,
     page_size: int = 20,
-) -> tuple[list[Application], int]:
+    cursor: str | None = None,
+) -> tuple[list[Application], int, str | None]:
     # Phase 2.1.2 (minimal): listing + status filter + simple pagination.
     # Tenant id is required until auth/tenant-context middleware lands.
     if page < 1:
@@ -89,6 +91,28 @@ async def list_applications(
         page_size = 1
     if page_size > 100:
         page_size = 100
+
+    def _encode_cursor(created_at: datetime, app_id: UUID) -> str:
+        raw = f"{created_at.isoformat()}|{app_id}".encode("utf-8")
+        return base64.urlsafe_b64encode(raw).decode("ascii")
+
+    def _decode_cursor(value: str) -> tuple[datetime, UUID]:
+        try:
+            raw = base64.urlsafe_b64decode(value.encode("ascii")).decode("utf-8")
+            created_at_s, app_id_s = raw.split("|", 1)
+            created_at = datetime.fromisoformat(created_at_s)
+            app_id = UUID(app_id_s)
+        except Exception as e:  # noqa: BLE001
+            raise ValueError("Invalid cursor") from e
+
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        return created_at, app_id
+
+    cursor_created_at: datetime | None = None
+    cursor_id: UUID | None = None
+    if cursor is not None:
+        cursor_created_at, cursor_id = _decode_cursor(cursor)
 
     base = select(Application).where(Application.tenant_id == tenant_id)
 
@@ -151,10 +175,54 @@ async def list_applications(
     else:
         order_expr = sa.nulls_last(order_expr.desc())
 
-    q = base.order_by(order_expr).offset((page - 1) * page_size).limit(page_size)
+    # Always add a stable tie-breaker to ensure deterministic pagination.
+    if sort_order == "asc":
+        id_order = Application.id.asc()
+    else:
+        id_order = Application.id.desc()
+
+    if cursor is not None and sort_by == "created_at" and cursor_created_at is not None and cursor_id is not None:
+        # Cursor paging is only defined for created_at ordering.
+        if sort_order == "asc":
+            base = base.where(
+                sa.or_(
+                    Application.created_at > cursor_created_at,
+                    sa.and_(
+                        Application.created_at == cursor_created_at,
+                        Application.id > cursor_id,
+                    ),
+                )
+            )
+        else:
+            base = base.where(
+                sa.or_(
+                    Application.created_at < cursor_created_at,
+                    sa.and_(
+                        Application.created_at == cursor_created_at,
+                        Application.id < cursor_id,
+                    ),
+                )
+            )
+
+        q = base.order_by(order_expr, id_order).limit(page_size)
+        items = (await session.execute(q)).scalars().all()
+
+        next_cursor = None
+        if len(items) == page_size:
+            last = items[-1]
+            next_cursor = _encode_cursor(last.created_at, last.id)
+
+        return items, total, next_cursor
+
+    q = base.order_by(order_expr, id_order).offset((page - 1) * page_size).limit(page_size)
     items = (await session.execute(q)).scalars().all()
 
-    return items, total
+    next_cursor = None
+    if sort_by == "created_at" and len(items) == page_size:
+        last = items[-1]
+        next_cursor = _encode_cursor(last.created_at, last.id)
+
+    return items, total, next_cursor
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:

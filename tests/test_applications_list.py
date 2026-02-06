@@ -252,3 +252,53 @@ def test_list_applications_sorts_by_score_desc_with_nulls_last():
 
     ids = [i["id"] for i in r.json()["items"]]
     assert ids[:3] == [a_high, a_low, a_none]
+
+
+def test_list_applications_supports_cursor_pagination_for_created_at():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    a1 = _create_application(client, tenant_id=tenant_id, applicant_name="A")
+    a2 = _create_application(client, tenant_id=tenant_id, applicant_name="B")
+    a3 = _create_application(client, tenant_id=tenant_id, applicant_name="C")
+
+    # Make ordering deterministic without relying on sleeps.
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE applications SET created_at = %s WHERE id = %s",
+                ("2026-01-01T00:00:00+00:00", a1),
+            )
+            cur.execute(
+                "UPDATE applications SET created_at = %s WHERE id = %s",
+                ("2026-01-02T00:00:00+00:00", a2),
+            )
+            cur.execute(
+                "UPDATE applications SET created_at = %s WHERE id = %s",
+                ("2026-01-03T00:00:00+00:00", a3),
+            )
+        conn.commit()
+
+    r1 = client.get(
+        f"/api/v1/applications?tenant_id={tenant_id}&sort_by=created_at&sort_order=asc&page_size=2"
+    )
+    assert r1.status_code == 200, r1.text
+    d1 = r1.json()
+
+    assert d1["total"] == 3
+    assert len(d1["items"]) == 2
+    assert d1["items"][0]["id"] == a1
+    assert d1["items"][1]["id"] == a2
+    assert d1.get("next_cursor"), "Expected next_cursor for cursor paging"
+
+    cursor = d1["next_cursor"]
+
+    r2 = client.get(
+        f"/api/v1/applications?tenant_id={tenant_id}&sort_by=created_at&sort_order=asc&page_size=2&cursor={cursor}"
+    )
+    assert r2.status_code == 200, r2.text
+    d2 = r2.json()
+
+    assert d2["total"] == 3
+    assert len(d2["items"]) == 1
+    assert d2["items"][0]["id"] == a3

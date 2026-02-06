@@ -48,6 +48,13 @@ async def list_applications_endpoint(
     sort_order: str = Query("desc", description="Sort order: asc | desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    cursor: str | None = Query(
+        None,
+        description=(
+            "Optional cursor for pagination. Only supported with sort_by=created_at. "
+            "Use the next_cursor value from the previous response."
+        ),
+    ),
     session: AsyncSession = Depends(get_db),
 ) -> ApplicationListResponse:
     import uuid
@@ -66,7 +73,13 @@ async def list_applications_endpoint(
     if sort_order not in {"asc", "desc"}:
         raise HTTPException(status_code=422, detail="Invalid sort_order")
 
-    items, total = await list_applications(
+    if cursor is not None and sort_by != "created_at":
+        raise HTTPException(
+            status_code=422,
+            detail="cursor pagination is only supported with sort_by=created_at",
+        )
+
+    items, total, next_cursor = await list_applications(
         session=session,
         tenant_id=tenant_uuid,
         status=status,
@@ -77,13 +90,15 @@ async def list_applications_endpoint(
         sort_order=sort_order,
         page=page,
         page_size=page_size,
+        cursor=cursor,
     )
 
     return ApplicationListResponse(
         items=[ApplicationListItem.model_validate(i) for i in items],
         total=total,
-        page=page,
+        page=1 if cursor is not None else page,
         page_size=page_size,
+        next_cursor=next_cursor,
     )
 
 
