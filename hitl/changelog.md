@@ -20,7 +20,7 @@
 - Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
 
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
-- API: extend GET /api/v1/applications/{id} detail payload with latest queue_info + decision_history.
+- API: extend GET /api/v1/applications/{id} detail payload with latest queue_info + decision_history + similar_cases.
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 - API: added GET /api/v1/applications/{id} (detail) with optional tenant scoping via `tenant_id` query param; includes latest scoring_result when present.

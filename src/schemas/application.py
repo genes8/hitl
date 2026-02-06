@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.decision import DecisionRead
 from src.schemas.scoring_result import ScoringResultRead
+from src.schemas.similar_case import SimilarCaseRead
 
 
 class ApplicationCreate(BaseModel):
@@ -109,6 +110,7 @@ class ApplicationRead(BaseModel):
     scoring_result: ScoringResultRead | None = None
     queue_info: AnalystQueueRead | None = None
     decision_history: list[DecisionRead] = Field(default_factory=list)
+    similar_cases: list[SimilarCaseRead] = Field(default_factory=list)
 
     submitted_at: datetime
     expires_at: datetime | None
