@@ -184,6 +184,12 @@ async def list_applications(
     if to_date is not None:
         base = base.where(Application.created_at <= to_date)
 
+    # Cursor pagination + submitted_at: submitted_at is nullable; keyset comparisons
+    # with NULL break pagination semantics. For cursor requests, only paginate over
+    # rows with submitted_at present.
+    if cursor is not None and sort_by == "submitted_at":
+        base = base.where(Application.submitted_at.isnot(None))
+
     # total count
     count_q = select(func.count()).select_from(base.subquery())
     total = int((await session.execute(count_q)).scalar_one())
@@ -260,6 +266,9 @@ async def list_applications(
             payload = {"v": 1, "value": last_value.isoformat(), "id": str(last.id)}
             encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
             next_cursor = encoded.rstrip("=")
+        else:
+            # submitted_at can be NULL; if we cannot derive a stable cursor, omit it.
+            next_cursor = None
 
     return items, total, next_cursor
 
