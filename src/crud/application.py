@@ -13,6 +13,7 @@ from src.models.audit_log import AuditLog
 from src.models.analyst_queue import AnalystQueue
 from src.models.decision import Decision
 from src.models.scoring_result import ScoringResult
+from src.models.similar_case import SimilarCase
 from src.schemas.application import ApplicationCreate
 
 
@@ -95,6 +96,22 @@ async def get_decision_history(
         select(Decision)
         .where(Decision.application_id == application_id)
         .order_by(Decision.created_at.asc())
+    )
+    r = await session.execute(q)
+    return list(r.scalars().all())
+
+
+async def get_similar_cases(
+    session: AsyncSession,
+    *,
+    application_id,
+    limit: int = 5,
+) -> list[SimilarCase]:
+    q = (
+        select(SimilarCase)
+        .where(SimilarCase.application_id == application_id)
+        .order_by(SimilarCase.match_score.desc(), SimilarCase.created_at.desc())
+        .limit(limit)
     )
     r = await session.execute(q)
     return list(r.scalars().all())

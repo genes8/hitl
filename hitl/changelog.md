@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- API: GET /api/v1/applications/{id} now includes similar_cases when available (+ test).
 - API: GET /api/v1/applications/{id} now includes decision_history when decisions exist (+ test).
 - API: GET /api/v1/applications/{id} now includes queue_info when an analyst_queues entry exists (+ test).
 - Tests/DB: add EXPLAIN ANALYZE perf guardrail for application listing query (10k rows; budget via HITL_APP_LIST_10K_MAX_MS).

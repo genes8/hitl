@@ -160,6 +160,38 @@ def _insert_decision(*, application_id: uuid.UUID) -> uuid.UUID:
     return decision_id
 
 
+def _insert_similar_case(*, application_id: uuid.UUID) -> uuid.UUID:
+    similar_case_id = uuid.uuid4()
+    matched_application_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO similar_cases (
+                  id,
+                  application_id,
+                  matched_application_id,
+                  match_score,
+                  features_snapshot,
+                  outcome_snapshot,
+                  method
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    similar_case_id,
+                    application_id,
+                    matched_application_id,
+                    0.87,
+                    {"dti_ratio": 0.3},
+                    {"decision_outcome": "approved"},
+                    "vector",
+                ),
+            )
+        conn.commit()
+    return similar_case_id
+
+
 def test_get_application_200_after_create():
     tenant_id = _create_tenant()
     client = TestClient(app)
@@ -190,6 +222,7 @@ def test_get_application_200_after_create():
     assert r.json()["scoring_result"] is None
     assert r.json()["queue_info"] is None
     assert r.json()["decision_history"] == []
+    assert r.json()["similar_cases"] == []
 
 
 def test_get_application_includes_scoring_result_when_exists():
@@ -227,6 +260,7 @@ def test_get_application_includes_scoring_result_when_exists():
     assert scoring["risk_category"] == "low"
 
     assert r.json()["decision_history"] == []
+    assert r.json()["similar_cases"] == []
 
 
 def test_get_application_includes_queue_info_when_exists():
@@ -266,6 +300,7 @@ def test_get_application_includes_queue_info_when_exists():
     assert queue_info["score_at_routing"] == 650
 
     assert r.json()["decision_history"] == []
+    assert r.json()["similar_cases"] == []
 
 
 def test_get_application_includes_decision_history_when_exists():
@@ -302,6 +337,42 @@ def test_get_application_includes_decision_history_when_exists():
     assert decisions[0]["application_id"] == str(app_id)
     assert decisions[0]["decision_type"] == "analyst_approve"
     assert decisions[0]["decision_outcome"] == "approved"
+
+
+def test_get_application_includes_similar_cases_when_exists():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+    similar_case_id = _insert_similar_case(application_id=app_id)
+
+    r = client.get(f"/api/v1/applications/{app_id}")
+    assert r.status_code == 200, r.text
+
+    similar_cases = r.json()["similar_cases"]
+    assert isinstance(similar_cases, list)
+    assert len(similar_cases) == 1
+    assert similar_cases[0]["id"] == str(similar_case_id)
+    assert similar_cases[0]["application_id"] == str(app_id)
+    assert similar_cases[0]["match_score"] == 0.87
+    assert similar_cases[0]["method"] == "vector"
 
 
 def test_get_application_404_when_unknown_uuid():
