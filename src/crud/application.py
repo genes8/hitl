@@ -171,6 +171,8 @@ async def list_applications(
     order_expr = None
     if sort_by == "created_at":
         order_expr = Application.created_at
+    elif sort_by == "submitted_at":
+        order_expr = Application.submitted_at
     elif sort_by == "amount":
         # loan_request is JSONB; cast loan_amount to numeric for sorting.
         order_expr = Application.loan_request["loan_amount"].astext.cast(sa.Numeric)

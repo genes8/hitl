@@ -48,7 +48,10 @@ async def list_applications_endpoint(
     from_date: datetime | None = Query(None, description="Filter: created_at >= from_date"),
     to_date: datetime | None = Query(None, description="Filter: created_at <= to_date"),
     search: str | None = Query(None, description="Search: external_id or applicant name"),
-    sort_by: str = Query("created_at", description="Sort field: created_at | amount | score"),
+    sort_by: str = Query(
+        "created_at",
+        description="Sort field: created_at | submitted_at | amount | score",
+    ),
     sort_order: str = Query("desc", description="Sort order: asc | desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -64,7 +67,7 @@ async def list_applications_endpoint(
     if from_date is not None and to_date is not None and from_date > to_date:
         raise HTTPException(status_code=422, detail="from_date must be <= to_date")
 
-    if sort_by not in {"created_at", "amount", "score"}:
+    if sort_by not in {"created_at", "submitted_at", "amount", "score"}:
         raise HTTPException(status_code=422, detail="Invalid sort_by")
 
     if sort_order not in {"asc", "desc"}:

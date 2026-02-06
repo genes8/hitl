@@ -177,6 +177,35 @@ def test_list_applications_sorts_by_amount():
     assert ids == [low_id, high_id]
 
 
+def test_list_applications_sorts_by_submitted_at():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    a1 = _create_application(client, tenant_id=tenant_id, applicant_name="First")
+    a2 = _create_application(client, tenant_id=tenant_id, applicant_name="Second")
+
+    # Force deterministic ordering regardless of how fast the rows were created.
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE applications SET submitted_at = %s WHERE id = %s",
+                ("2020-01-01T00:00:00+00:00", a1),
+            )
+            cur.execute(
+                "UPDATE applications SET submitted_at = %s WHERE id = %s",
+                ("2021-01-01T00:00:00+00:00", a2),
+            )
+        conn.commit()
+
+    r = client.get(
+        f"/api/v1/applications?tenant_id={tenant_id}&sort_by=submitted_at&sort_order=asc"
+    )
+    assert r.status_code == 200, r.text
+
+    ids = [i["id"] for i in r.json()["items"]]
+    assert ids[:2] == [a1, a2]
+
+
 def test_list_applications_sorts_by_score_desc_with_nulls_last():
     tenant_id = _create_tenant()
     client = TestClient(app)

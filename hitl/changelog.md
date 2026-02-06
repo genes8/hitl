@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
-- API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
+- API: add search + sorting (created_at/submitted_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
 - API: validate from_date <= to_date and validate sort_by/sort_order (422).
 - API: add sort_by=score option to GET /api/v1/applications (NULL scores last) (+ tests).
 - API: when sorting by score, use the *latest* scoring_result score (by created_at) rather than max(score).
