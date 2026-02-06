@@ -19,6 +19,7 @@ from src.schemas.application import (
     ApplicationRead,
 )
 from src.schemas.scoring_result import ScoringResultRead
+from src.worker.tasks import score_application
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -32,7 +33,7 @@ async def create_application_endpoint(
     app = await create_application(session=session, obj_in=payload)
 
     # TODO-2.1.1: Emit Celery task score_application(app.id)
-    # Placeholder until Celery wiring lands.
+    score_application.delay(str(app.id))
 
     return ApplicationRead.model_validate(app)
 
