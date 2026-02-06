@@ -4,3 +4,27 @@ __pycache__/
 .pytest_cache/
 .env
 .DS_Store
+
+# Node tooling (if present locally)
+node_modules/
+
+# OpenClaw local workspace metadata (should not be committed)
+AGENTS.md
+SOUL.md
+USER.md
+TOOLS.md
+HEARTBEAT.md
+IDENTITY.md
+TASKS.md
+
+# Local scratch/artifacts
+reports/
+mission-control/
+ideas.md
+medigent_pitch_deck_jan2026.txt
+
+# Local OpenClaw tooling artifacts in this workspace root
+genes8-hitl/
+package.json
+package-lock.json
+schema.json
