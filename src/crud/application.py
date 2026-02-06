@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
@@ -44,7 +45,11 @@ async def get_application(
     application_id,
     tenant_id=None,
 ) -> Application | None:
-    stmt = select(Application).where(Application.id == application_id)
+    stmt = (
+        select(Application)
+        .options(selectinload(Application.scoring_result))
+        .where(Application.id == application_id)
+    )
     if tenant_id is not None:
         stmt = stmt.where(Application.tenant_id == tenant_id)
 

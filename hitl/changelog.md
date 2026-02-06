@@ -5,6 +5,7 @@
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 - API: validate POST /api/v1/applications required fields (applicant_data/financial_data/loan_request) + tests.
 - API: added GET /api/v1/applications/{id} (+ optional tenant_id scoping) + tests.
+- API: application detail now includes scoring_result (if exists) + tests.
 - API: added GET /api/v1/applications (list) with tenant/status/search filters + pagination + sort_by (created_at/amount) + tests.
 - API: added optional cursor pagination for GET /api/v1/applications (sort_by=created_at) + tests.
 - API: added from_date/to_date filtering + sort_by=score (outer join scoring_results) for GET /api/v1/applications + tests.

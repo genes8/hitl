@@ -25,6 +25,49 @@ def _create_tenant(*, name: str = "Test Tenant") -> uuid.UUID:
     return tenant_id
 
 
+def _insert_scoring_result(*, application_id: uuid.UUID) -> uuid.UUID:
+    scoring_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO scoring_results (
+                    id,
+                    application_id,
+                    model_id,
+                    model_version,
+                    score,
+                    probability_default,
+                    risk_category,
+                    routing_decision,
+                    threshold_config_id,
+                    features,
+                    shap_values,
+                    top_factors,
+                    scoring_time_ms
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    scoring_id,
+                    application_id,
+                    "test-model",
+                    "v1",
+                    720,
+                    0.1234,
+                    "low",
+                    "auto_approve",
+                    None,
+                    {"f": 1},
+                    {"s": [0.1, 0.2]},
+                    {"factors": ["income"]},
+                    42,
+                ),
+            )
+        conn.commit()
+    return scoring_id
+
+
 def test_get_application_200():
     tenant_id = _create_tenant()
 
@@ -51,9 +94,15 @@ def test_get_application_200():
     assert r_create.status_code == 201, r_create.text
     app_id = r_create.json()["id"]
 
+    _insert_scoring_result(application_id=uuid.UUID(app_id))
+
     r_get = client.get(f"/api/v1/applications/{app_id}")
     assert r_get.status_code == 200, r_get.text
-    assert r_get.json()["id"] == app_id
+    body = r_get.json()
+    assert body["id"] == app_id
+    assert body["scoring_result"] is not None
+    assert body["scoring_result"]["application_id"] == app_id
+    assert body["scoring_result"]["score"] == 720
 
 
 def test_get_application_404_when_tenant_scope_mismatch():
