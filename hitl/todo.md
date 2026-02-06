@@ -454,7 +454,7 @@ Can be parallelized: Yes (with TODO-2.1.3)
 
 Tasks:
 - [x] Create GET /applications endpoint
-- [ ] Implement query parameters:
+- [x] Implement query parameters:
   - [x] status: string (pending, scoring, review, approved, declined)
   - [x] from_date: datetime
   - [x] to_date: datetime
