@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- API: add generic BaseCRUD scaffold (async SQLAlchemy) for upcoming tenant-aware CRUD modules.
 - API: add cursor pagination option to GET /api/v1/applications (keyset pagination for created_at/submitted_at ordering).
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
 - API: add search + sorting (created_at/submitted_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
