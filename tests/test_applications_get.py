@@ -375,6 +375,52 @@ def test_get_application_includes_similar_cases_when_exists():
     assert similar_cases[0]["method"] == "vector"
 
 
+def test_get_application_detail_includes_all_related_data_when_present():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+
+    scoring_id = _insert_scoring_result(application_id=app_id)
+    queue_id = _insert_queue_entry(application_id=app_id)
+    decision_id = _insert_decision(application_id=app_id)
+    similar_case_id = _insert_similar_case(application_id=app_id)
+
+    r = client.get(f"/api/v1/applications/{app_id}")
+    assert r.status_code == 200, r.text
+
+    data = r.json()
+
+    assert data["id"] == str(app_id)
+    assert data["tenant_id"] == str(tenant_id)
+
+    assert data["scoring_result"]["id"] == str(scoring_id)
+    assert data["queue_info"]["id"] == str(queue_id)
+
+    assert len(data["decision_history"]) == 1
+    assert data["decision_history"][0]["id"] == str(decision_id)
+
+    assert len(data["similar_cases"]) == 1
+    assert data["similar_cases"][0]["id"] == str(similar_case_id)
+
+
 def test_get_application_404_when_unknown_uuid():
     client = TestClient(app)
     unknown = uuid.uuid4()

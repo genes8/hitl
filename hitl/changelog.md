@@ -7,6 +7,7 @@
 - API: GET /api/v1/applications/{id} now includes similar_cases when available (+ test).
 - API: GET /api/v1/applications/{id} now includes decision_history when decisions exist (+ test).
 - API: GET /api/v1/applications/{id} now includes queue_info when an analyst_queues entry exists (+ test).
+- Tests/API: add coverage ensuring application detail returns all related sub-resources when all are present (scoring_result + queue_info + decision_history + similar_cases).
 - Tests/DB: add EXPLAIN ANALYZE perf guardrail for application listing query (10k rows; budget via HITL_APP_LIST_10K_MAX_MS).
 - DB: add composite index to speed up status-filtered application listing (tenant_id + status + created_at).
 - DB: add composite indexes to speed up GET /api/v1/applications (tenant_id + created_at, tenant_id + external_id).
