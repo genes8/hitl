@@ -32,7 +32,18 @@ async def create_application_endpoint(
     app = await create_application(session=session, obj_in=payload)
 
     # TODO-2.1.1: Emit Celery task score_application(app.id)
-    # Placeholder until Celery wiring lands.
+    # Best-effort enqueue: the create call should still succeed even if Redis/Celery is down.
+    from src.worker.tasks import score_application
+
+    try:
+        score_application.delay(str(app.id))
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception(
+            "Failed to enqueue score_application task",
+            extra={"application_id": str(app.id)},
+        )
 
     return ApplicationRead.model_validate(app)
 
