@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- DB: add indexes to speed up GET /api/v1/applications listing (tenant+created_at, tenant+external_id, tenant+loan_amount).
 - API: enqueue scoring task on application intake (dispatcher shim; Celery wiring in TODO-2.4.1).
 - Dev: add idempotent dev seed script (tenant/users/default threshold) for local/dev environments.
 - API: add search + sorting (created_at/amount, asc/desc) to GET /api/v1/applications (+ tests).
