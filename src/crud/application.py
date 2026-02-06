@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.application import Application
 from src.models.audit_log import AuditLog
+from src.models.analyst_queue import AnalystQueue
 from src.models.scoring_result import ScoringResult
 from src.schemas.application import ApplicationCreate
 
@@ -63,6 +64,21 @@ async def get_latest_scoring_result(
         select(ScoringResult)
         .where(ScoringResult.application_id == application_id)
         .order_by(ScoringResult.created_at.desc())
+        .limit(1)
+    )
+    r = await session.execute(q)
+    return r.scalar_one_or_none()
+
+
+async def get_latest_queue_entry(
+    session: AsyncSession,
+    *,
+    application_id,
+) -> AnalystQueue | None:
+    q = (
+        select(AnalystQueue)
+        .where(AnalystQueue.application_id == application_id)
+        .order_by(AnalystQueue.created_at.desc())
         .limit(1)
     )
     r = await session.execute(q)
