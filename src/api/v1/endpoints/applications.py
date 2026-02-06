@@ -55,6 +55,10 @@ async def list_applications_endpoint(
     sort_order: str = Query("desc", description="Sort order: asc | desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    cursor: str | None = Query(
+        None,
+        description="Optional cursor for keyset pagination (only for created_at/submitted_at)",
+    ),
     session: AsyncSession = Depends(get_db),
 ) -> ApplicationListResponse:
     import uuid
@@ -73,24 +77,35 @@ async def list_applications_endpoint(
     if sort_order not in {"asc", "desc"}:
         raise HTTPException(status_code=422, detail="Invalid sort_order")
 
-    items, total = await list_applications(
-        session=session,
-        tenant_id=tenant_uuid,
-        status=status,
-        from_date=from_date,
-        to_date=to_date,
-        search=search,
-        sort_by=sort_by,
-        sort_order=sort_order,
-        page=page,
-        page_size=page_size,
-    )
+    if cursor is not None and sort_by not in {"created_at", "submitted_at"}:
+        raise HTTPException(
+            status_code=422,
+            detail="cursor pagination is only supported for sort_by=created_at|submitted_at",
+        )
+
+    try:
+        items, total, next_cursor = await list_applications(
+            session=session,
+            tenant_id=tenant_uuid,
+            status=status,
+            from_date=from_date,
+            to_date=to_date,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+            cursor=cursor,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
     return ApplicationListResponse(
         items=[ApplicationListItem.model_validate(i) for i in items],
         total=total,
         page=page,
         page_size=page_size,
+        next_cursor=next_cursor,
     )
 
 

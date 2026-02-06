@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
+
+import base64
+import json
 
 import sqlalchemy as sa
 from sqlalchemy import func, select
@@ -107,7 +110,8 @@ async def list_applications(
     sort_order: str = "desc",
     page: int = 1,
     page_size: int = 20,
-) -> tuple[list[Application], int]:
+    cursor: str | None = None,
+) -> tuple[list[Application], int, str | None]:
     # Phase 2.1.2 (minimal): listing + status filter + simple pagination.
     # Tenant id is required until auth/tenant-context middleware lands.
     if page < 1:
@@ -168,32 +172,79 @@ async def list_applications(
     total = int((await session.execute(count_q)).scalar_one())
 
     # Ordering
-    order_expr = None
+    order_col = None
     if sort_by == "created_at":
-        order_expr = Application.created_at
+        order_col = Application.created_at
     elif sort_by == "submitted_at":
-        order_expr = Application.submitted_at
+        order_col = Application.submitted_at
     elif sort_by == "amount":
         # loan_request is JSONB; cast loan_amount to numeric for sorting.
-        order_expr = Application.loan_request["loan_amount"].astext.cast(sa.Numeric)
+        order_col = Application.loan_request["loan_amount"].astext.cast(sa.Numeric)
     elif sort_by == "score":
         # Joined via score_subq above.
-        order_expr = (score_subq.c.score if score_subq is not None else None)
+        order_col = (score_subq.c.score if score_subq is not None else None)
     else:
-        order_expr = Application.created_at
+        order_col = Application.created_at
 
-    if order_expr is None:
-        order_expr = Application.created_at
+    if order_col is None:
+        order_col = Application.created_at
+
+    # Cursor pagination (keyset): only supported for timestamp-based sorts.
+    # We keep it intentionally narrow to avoid null-handling edge cases in v1.
+    cursor_value: datetime | None = None
+    cursor_id: UUID | None = None
+
+    if cursor is not None:
+        if sort_by not in {"created_at", "submitted_at"}:
+            raise ValueError("cursor pagination only supported for created_at/submitted_at")
+
+        try:
+            padding = "=" * (-len(cursor) % 4)
+            raw = base64.urlsafe_b64decode((cursor + padding).encode("utf-8")).decode("utf-8")
+            payload = json.loads(raw)
+            cursor_value = datetime.fromisoformat(payload["value"])
+            cursor_id = UUID(payload["id"])
+        except Exception as e:  # noqa: BLE001
+            raise ValueError("Invalid cursor") from e
+
+        # If caller provided naive datetime in cursor, assume UTC.
+        if cursor_value.tzinfo is None:
+            cursor_value = cursor_value.replace(tzinfo=timezone.utc)
 
     if sort_order == "asc":
-        order_expr = sa.nulls_last(order_expr.asc())
+        order_expr = sa.nulls_last(order_col.asc())
+        id_expr = Application.id.asc()
     else:
-        order_expr = sa.nulls_last(order_expr.desc())
+        order_expr = sa.nulls_last(order_col.desc())
+        id_expr = Application.id.desc()
 
-    q = base.order_by(order_expr).offset((page - 1) * page_size).limit(page_size)
+    q = base.order_by(order_expr, id_expr)
+
+    if cursor_value is not None and cursor_id is not None:
+        # Tie-break with (order_col, id) to ensure stable ordering.
+        keyset = sa.tuple_(order_col, Application.id)
+        if sort_order == "asc":
+            q = q.where(keyset > sa.tuple_(cursor_value, cursor_id))
+        else:
+            q = q.where(keyset < sa.tuple_(cursor_value, cursor_id))
+
+    if cursor is None:
+        # Offset pagination (legacy)
+        q = q.offset((page - 1) * page_size)
+
+    q = q.limit(page_size)
     items = (await session.execute(q)).scalars().all()
 
-    return items, total
+    next_cursor: str | None = None
+    if len(items) == page_size and sort_by in {"created_at", "submitted_at"}:
+        last = items[-1]
+        last_value = getattr(last, sort_by)
+        if isinstance(last_value, datetime):
+            payload = {"v": 1, "value": last_value.isoformat(), "id": str(last.id)}
+            encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+            next_cursor = encoded.rstrip("=")
+
+    return items, total, next_cursor
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:

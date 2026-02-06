@@ -85,6 +85,10 @@ class ApplicationListResponse(BaseModel):
     page: int
     page_size: int
 
+    # Optional keyset/cursor pagination (Phase 2.1.2 follow-up).
+    # When provided by the server, pass it back as `cursor` to fetch the next page.
+    next_cursor: str | None = None
+
 
 class ApplicationRead(BaseModel):
     id: UUID
