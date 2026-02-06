@@ -459,7 +459,7 @@ Tasks:
   - [x] from_date: datetime
   - [x] to_date: datetime
   - [x] search: string (external_id, applicant name)
-  - [x] sort_by: string (created_at, amount, score)
+  - [x] sort_by: string (created_at, submitted_at, amount, score)
   - [x] sort_order: asc | desc
   - [x] page: int (default 1)
   - [x] page_size: int (default 20, max 100)
