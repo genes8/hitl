@@ -454,7 +454,7 @@ Can be parallelized: Yes (with TODO-2.1.3)
 
 Tasks:
 - [x] Create GET /applications endpoint
-- [ ] Implement query parameters:
+- [x] Implement query parameters:
   - [x] status: string (pending, scoring, review, approved, declined)
   - [x] from_date: datetime
   - [x] to_date: datetime
@@ -468,7 +468,7 @@ Tasks:
 - [x] Return paginated response with total count
 - [x] Test: Filters work correctly
 - [x] Test: Pagination returns correct pages
-- [ ] Test: Response time < 100ms for 10k records
+- [x] Test: Response time < 100ms for 10k records
 
 Definition of Done:
 - Listing endpoint complete with all filters

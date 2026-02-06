@@ -10,6 +10,7 @@
 - API: add sort_by=score option to GET /api/v1/applications (NULL scores last) (+ tests).
 - API: add from_date/to_date filters to GET /api/v1/applications (+ tests).
 - API: add cursor pagination option (sort_by=created_at) to GET /api/v1/applications (+ tests).
+- Tests: add query-plan perf guard for GET /api/v1/applications (asserts tenant+created_at index is used for large tenant dataset).
 - API: add GET /api/v1/applications listing endpoint with tenant_id scoping, status filter, and simple pagination (+ tests).
 - API: add request ID middleware (X-Request-ID passthrough / generation) + lightweight access logging for easier tracing.
 - DB: add tests for Postgres functions (calculate_queue_priority / get_active_threshold / sync_application_status) and for key schema constraints.
