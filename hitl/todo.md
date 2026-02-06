@@ -453,19 +453,19 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.3)
 
 Tasks:
-- [ ] Create GET /applications endpoint
+- [x] Create GET /applications endpoint
 - [ ] Implement query parameters:
-  - [ ] status: string (pending, scoring, review, approved, declined)
-  - [ ] from_date: datetime
-  - [ ] to_date: datetime
-  - [ ] search: string (external_id, applicant name)
-  - [ ] sort_by: string (created_at, amount, score)
-  - [ ] sort_order: asc | desc
-  - [ ] page: int (default 1)
-  - [ ] page_size: int (default 20, max 100)
+  - [x] status: string (pending, scoring, review, approved, declined)
+  - [x] from_date: datetime
+  - [x] to_date: datetime
+  - [x] search: string (external_id, applicant name)
+  - [x] sort_by: string (created_at, submitted_at, amount) (score TODO)
+  - [x] sort_order: asc | desc
+  - [x] page: int (default 1)
+  - [x] page_size: int (default 20, max 100)
 - [ ] Implement cursor pagination option
 - [ ] Optimize query with proper indexes
-- [ ] Return paginated response with total count
+- [x] Return paginated response with total count
 - [ ] Test: Filters work correctly
 - [ ] Test: Pagination returns correct pages
 - [ ] Test: Response time < 100ms for 10k records
@@ -483,8 +483,8 @@ Estimated Hours: 16
 Can be parallelized: Yes (with TODO-2.1.2)
 
 Tasks:
-- [ ] Create GET /applications/{id} endpoint
-- [ ] Include scoring_result (if exists)
+- [x] Create GET /applications/{id} endpoint
+- [x] Include scoring_result (if exists)
 - [ ] Include queue_info (if in queue)
 - [ ] Include decision_history (all decisions)
 - [ ] Include similar_cases (if available)
