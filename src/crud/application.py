@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.application import Application
 from src.models.audit_log import AuditLog
 from src.models.analyst_queue import AnalystQueue
+from src.models.decision import Decision
 from src.models.scoring_result import ScoringResult
 from src.schemas.application import ApplicationCreate
 
@@ -83,6 +84,20 @@ async def get_latest_queue_entry(
     )
     r = await session.execute(q)
     return r.scalar_one_or_none()
+
+
+async def get_decision_history(
+    session: AsyncSession,
+    *,
+    application_id,
+) -> list[Decision]:
+    q = (
+        select(Decision)
+        .where(Decision.application_id == application_id)
+        .order_by(Decision.created_at.asc())
+    )
+    r = await session.execute(q)
+    return list(r.scalars().all())
 
 
 async def list_applications(

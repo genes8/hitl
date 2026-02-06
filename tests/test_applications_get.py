@@ -111,6 +111,55 @@ def _insert_queue_entry(*, application_id: uuid.UUID) -> uuid.UUID:
     return queue_id
 
 
+def _insert_decision(*, application_id: uuid.UUID) -> uuid.UUID:
+    decision_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO decisions (
+                  id,
+                  application_id,
+                  scoring_result_id,
+                  analyst_id,
+                  decision_type,
+                  decision_outcome,
+                  approved_terms,
+                  conditions,
+                  reasoning,
+                  reasoning_category,
+                  override_flag,
+                  override_direction,
+                  override_justification,
+                  override_approved_by,
+                  override_approved_at,
+                  review_time_seconds
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (
+                    decision_id,
+                    application_id,
+                    None,
+                    None,
+                    "analyst_approve",
+                    "approved",
+                    {"apr": 12.5},
+                    None,
+                    "looks good",
+                    "income",
+                    False,
+                    None,
+                    None,
+                    None,
+                    None,
+                    120,
+                ),
+            )
+        conn.commit()
+    return decision_id
+
+
 def test_get_application_200_after_create():
     tenant_id = _create_tenant()
     client = TestClient(app)
@@ -140,6 +189,7 @@ def test_get_application_200_after_create():
     assert r.json()["tenant_id"] == str(tenant_id)
     assert r.json()["scoring_result"] is None
     assert r.json()["queue_info"] is None
+    assert r.json()["decision_history"] == []
 
 
 def test_get_application_includes_scoring_result_when_exists():
@@ -175,6 +225,8 @@ def test_get_application_includes_scoring_result_when_exists():
     assert scoring["application_id"] == str(app_id)
     assert scoring["score"] == 720
     assert scoring["risk_category"] == "low"
+
+    assert r.json()["decision_history"] == []
 
 
 def test_get_application_includes_queue_info_when_exists():
@@ -212,6 +264,44 @@ def test_get_application_includes_queue_info_when_exists():
     assert queue_info["priority"] == 10
     assert queue_info["routing_reason"] == "borderline_score"
     assert queue_info["score_at_routing"] == 650
+
+    assert r.json()["decision_history"] == []
+
+
+def test_get_application_includes_decision_history_when_exists():
+    tenant_id = _create_tenant()
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {"loan_amount": 12000, "estimated_payment": 300},
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    created = client.post("/api/v1/applications", json=payload)
+    assert created.status_code == 201, created.text
+
+    app_id = uuid.UUID(created.json()["id"])
+    decision_id = _insert_decision(application_id=app_id)
+
+    r = client.get(f"/api/v1/applications/{app_id}")
+    assert r.status_code == 200, r.text
+
+    decisions = r.json()["decision_history"]
+    assert isinstance(decisions, list)
+    assert len(decisions) == 1
+    assert decisions[0]["id"] == str(decision_id)
+    assert decisions[0]["application_id"] == str(app_id)
+    assert decisions[0]["decision_type"] == "analyst_approve"
+    assert decisions[0]["decision_outcome"] == "approved"
 
 
 def test_get_application_404_when_unknown_uuid():
