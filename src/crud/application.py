@@ -14,7 +14,7 @@ from src.models.analyst_queue import AnalystQueue
 from src.models.decision import Decision
 from src.models.scoring_result import ScoringResult
 from src.models.similar_case import SimilarCase
-from src.schemas.application import ApplicationCreate
+from src.schemas.application import ApplicationCreate, ApplicationUpdate
 
 
 def _compute_derived(financial_data: dict, loan_request: dict) -> dict:
@@ -316,3 +316,76 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
     await session.commit()
     await session.refresh(app)
     return app
+
+
+async def update_application(
+    session: AsyncSession,
+    *,
+    db_obj: Application,
+    obj_in: ApplicationUpdate,
+) -> Application:
+    update_data = obj_in.model_dump(exclude_unset=True)
+
+    old_value = {
+        "external_id": db_obj.external_id,
+        "status": db_obj.status,
+        "source": db_obj.source,
+        "applicant_data": db_obj.applicant_data,
+        "financial_data": db_obj.financial_data,
+        "loan_request": db_obj.loan_request,
+        "credit_bureau_data": db_obj.credit_bureau_data,
+        "meta": db_obj.meta,
+    }
+
+    if "external_id" in update_data:
+        db_obj.external_id = update_data["external_id"]
+    if "applicant_data" in update_data:
+        db_obj.applicant_data = update_data["applicant_data"]
+    if "financial_data" in update_data:
+        db_obj.financial_data = update_data["financial_data"]
+    if "loan_request" in update_data:
+        db_obj.loan_request = update_data["loan_request"]
+    if "credit_bureau_data" in update_data:
+        db_obj.credit_bureau_data = update_data["credit_bureau_data"]
+    if "source" in update_data:
+        db_obj.source = update_data["source"]
+    if "status" in update_data:
+        db_obj.status = update_data["status"]
+
+    # Keep derived ratios in sync for any pending-field edits.
+    if "financial_data" in update_data or "loan_request" in update_data:
+        fin = db_obj.financial_data or {}
+        loan = db_obj.loan_request or {}
+        derived = _compute_derived(fin, loan)
+        meta = dict(db_obj.meta or {})
+        meta["derived"] = derived
+        db_obj.meta = meta
+
+    new_value = {
+        "external_id": db_obj.external_id,
+        "status": db_obj.status,
+        "source": db_obj.source,
+        "applicant_data": db_obj.applicant_data,
+        "financial_data": db_obj.financial_data,
+        "loan_request": db_obj.loan_request,
+        "credit_bureau_data": db_obj.credit_bureau_data,
+        "meta": db_obj.meta,
+    }
+
+    changed_keys = sorted({k for k in new_value.keys() if old_value.get(k) != new_value.get(k)})
+
+    audit = AuditLog(
+        tenant_id=db_obj.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=db_obj.id,
+        action="update",
+        old_value=old_value,
+        new_value=new_value,
+        change_summary="application updated" + (f" ({', '.join(changed_keys)})" if changed_keys else ""),
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(db_obj)
+    return db_obj

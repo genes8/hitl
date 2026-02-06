@@ -93,6 +93,18 @@ class ApplicationListResponse(BaseModel):
     next_cursor: str | None = None
 
 
+class ApplicationUpdate(BaseModel):
+    # TODO-2.1.3: PATCH /applications/{id}
+    # Only pending applications allow field updates; status transitions are validated in API.
+    external_id: str | None = None
+    applicant_data: dict[str, Any] | None = None
+    financial_data: dict[str, Any] | None = None
+    loan_request: dict[str, Any] | None = None
+    credit_bureau_data: dict[str, Any] | None = None
+    source: str | None = None
+    status: str | None = None
+
+
 class ApplicationRead(BaseModel):
     id: UUID
     tenant_id: UUID

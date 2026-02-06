@@ -13,6 +13,7 @@ from src.crud.application import (
     get_latest_scoring_result,
     get_similar_cases,
     list_applications,
+    update_application,
 )
 from src.database import get_db
 from src.schemas.application import (
@@ -20,6 +21,7 @@ from src.schemas.application import (
     ApplicationListItem,
     ApplicationListResponse,
     ApplicationRead,
+    ApplicationUpdate,
 )
 from src.schemas.decision import DecisionRead
 from src.schemas.queue import QueueInfoRead
@@ -156,3 +158,80 @@ async def get_application_endpoint(
     payload["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
 
     return ApplicationRead(**payload)
+
+
+@router.patch("/{application_id}", response_model=ApplicationRead)
+async def patch_application_endpoint(
+    application_id: str,
+    payload: ApplicationUpdate,
+    internal: bool = Query(
+        False,
+        description=(
+            "Allow internal-only status transitions (temporary; will be replaced by auth)."
+        ),
+    ),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    app = await get_application(session=session, application_id=app_id)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+
+    # Field updates are only allowed while the application is pending.
+    field_keys = {
+        "external_id",
+        "applicant_data",
+        "financial_data",
+        "loan_request",
+        "credit_bureau_data",
+        "source",
+    }
+    has_field_updates = any(k in update_data for k in field_keys)
+
+    if has_field_updates and app.status != "pending":
+        raise HTTPException(
+            status_code=422,
+            detail="Only pending applications can be edited",
+        )
+
+    # Status transition validation.
+    new_status = update_data.get("status")
+    if new_status is not None:
+        old_status = app.status
+
+        allowed_public = {
+            ("pending", "cancelled"),
+            ("review", "approved"),
+            ("review", "declined"),
+        }
+        allowed_internal = {
+            ("pending", "scoring"),
+            ("scoring", "review"),
+            ("scoring", "approved"),
+            ("scoring", "declined"),
+        }
+
+        if (old_status, new_status) in allowed_public:
+            pass
+        elif (old_status, new_status) in allowed_internal:
+            if not internal:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Status transition is internal-only",
+                )
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid status transition: {old_status} -> {new_status}",
+            )
+
+    updated = await update_application(session=session, db_obj=app, obj_in=payload)
+    return ApplicationRead.model_validate(updated)

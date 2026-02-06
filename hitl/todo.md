@@ -488,21 +488,21 @@ Tasks:
 - [x] Include queue_info (if in queue)
 - [x] Include decision_history (all decisions)
 - [x] Include similar_cases (if available)
-- [ ] Create PATCH /applications/{id} endpoint
-- [ ] Validate status transitions:
-  - [ ] pending -> cancelled ✓
-  - [ ] pending -> scoring ✓ (internal only)
-  - [ ] scoring -> review ✓ (internal only)
-  - [ ] scoring -> approved ✓ (internal only)
-  - [ ] scoring -> declined ✓ (internal only)
-  - [ ] review -> approved ✓
-  - [ ] review -> declined ✓
-  - [ ] [others blocked]
-- [ ] Only allow field updates on pending applications
+- [x] Create PATCH /applications/{id} endpoint
+- [x] Validate status transitions:
+  - [x] pending -> cancelled ✓
+  - [x] pending -> scoring ✓ (internal only)
+  - [x] scoring -> review ✓ (internal only)
+  - [x] scoring -> approved ✓ (internal only)
+  - [x] scoring -> declined ✓ (internal only)
+  - [x] review -> approved ✓
+  - [x] review -> declined ✓
+  - [x] [others blocked]
+- [x] Only allow field updates on pending applications
 - [ ] Create DELETE /applications/{id} endpoint (sets status = cancelled)
 - [ ] Test: Detail includes all related data
-- [ ] Test: Invalid transitions blocked
-- [ ] Test: Cancel works
+- [x] Test: Invalid transitions blocked
+- [x] Test: Cancel works
 
 Definition of Done:
 - Detail and update endpoints complete
