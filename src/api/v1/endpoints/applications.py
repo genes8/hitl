@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.application import (
+    cancel_application,
     create_application,
     get_application,
     get_latest_queue_entry,
@@ -13,6 +14,7 @@ from src.crud.application import (
     list_applications,
     list_decisions,
     list_similar_cases,
+    update_application_pending,
 )
 from src.database import get_db
 from src.schemas.application import (
@@ -20,6 +22,7 @@ from src.schemas.application import (
     ApplicationListItem,
     ApplicationListResponse,
     ApplicationRead,
+    ApplicationUpdate,
 )
 from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.decision import DecisionRead
@@ -148,3 +151,103 @@ async def get_application_endpoint(
     payload["similar_cases"] = [SimilarCaseRead.model_validate(s).model_dump() for s in similar_cases]
 
     return ApplicationRead(**payload)
+
+
+@router.patch("/{application_id}", response_model=ApplicationRead)
+async def patch_application_endpoint(
+    application_id: str,
+    payload: ApplicationUpdate,
+    tenant_id: str = Query(..., description="Tenant UUID"),
+    session: AsyncSession = Depends(get_db),
+) -> ApplicationRead:
+    """Update a pending application or cancel it.
+
+    v1 constraints:
+    - Field updates only allowed while status=pending.
+    - Status transition supported: pending -> cancelled.
+    """
+
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    app = await get_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    # Status transition (limited).
+    if payload.status is not None:
+        if payload.status != "cancelled":
+            raise HTTPException(status_code=422, detail="Only status=cancelled is supported")
+        try:
+            app = await cancel_application(session=session, app=app)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
+
+    # Field updates.
+    has_field_updates = any(
+        v is not None
+        for v in (
+            payload.external_id,
+            payload.applicant_data,
+            payload.financial_data,
+            payload.loan_request,
+            payload.credit_bureau_data,
+        )
+    )
+
+    if has_field_updates:
+        try:
+            app = await update_application_pending(
+                session=session,
+                app=app,
+                external_id=payload.external_id,
+                applicant_data=payload.applicant_data,
+                financial_data=payload.financial_data,
+                loan_request=payload.loan_request,
+                credit_bureau_data=payload.credit_bureau_data,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from e
+
+    return ApplicationRead.model_validate(app)
+
+
+@router.delete("/{application_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_application_endpoint(
+    application_id: str,
+    tenant_id: str = Query(..., description="Tenant UUID"),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    """Soft-delete (cancel) a pending application by setting status=cancelled."""
+
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    app = await get_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    try:
+        await cancel_application(session=session, app=app)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    return None

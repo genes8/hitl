@@ -22,6 +22,7 @@
 
 - API: add GET /api/v1/applications/{id} (basic detail endpoint) + tests.
 - API: extend GET /api/v1/applications/{id} detail payload with latest queue_info + decision_history + similar_cases.
+- API: add PATCH /api/v1/applications/{id} (pending-only field updates + pending->cancelled) and DELETE /api/v1/applications/{id} (soft cancel) (+ tests).
 
 - API: added POST /api/v1/applications (create application) with derived ratios + audit log entry (Phase 2 start).
 - API: added GET /api/v1/applications/{id} (detail) with optional tenant scoping via `tenant_id` query param; includes latest scoring_result when present.

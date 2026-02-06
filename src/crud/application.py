@@ -316,3 +316,111 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
     await session.commit()
     await session.refresh(app)
     return app
+
+
+def _diff_dict(old: dict, new: dict) -> dict:
+    changes: dict = {}
+    keys = set(old.keys()) | set(new.keys())
+    for k in keys:
+        if old.get(k) != new.get(k):
+            changes[k] = {"old": old.get(k), "new": new.get(k)}
+    return changes
+
+
+async def update_application_pending(
+    session: AsyncSession,
+    *,
+    app: Application,
+    external_id: str | None = None,
+    applicant_data: dict | None = None,
+    financial_data: dict | None = None,
+    loan_request: dict | None = None,
+    credit_bureau_data: dict | None = None,
+) -> Application:
+    if app.status != "pending":
+        raise ValueError("Only pending applications can be updated")
+
+    old = {
+        "external_id": app.external_id,
+        "applicant_data": app.applicant_data,
+        "financial_data": app.financial_data,
+        "loan_request": app.loan_request,
+        "credit_bureau_data": app.credit_bureau_data,
+        "meta": app.meta,
+        "status": app.status,
+    }
+
+    if external_id is not None:
+        app.external_id = external_id
+    if applicant_data is not None:
+        app.applicant_data = applicant_data
+    if financial_data is not None:
+        app.financial_data = financial_data
+    if loan_request is not None:
+        app.loan_request = loan_request
+    if credit_bureau_data is not None:
+        app.credit_bureau_data = credit_bureau_data
+
+    if financial_data is not None or loan_request is not None:
+        derived = _compute_derived(app.financial_data, app.loan_request)
+        meta = dict(app.meta or {})
+        meta["derived"] = derived
+        app.meta = meta
+
+    await session.flush()
+
+    new = {
+        "external_id": app.external_id,
+        "applicant_data": app.applicant_data,
+        "financial_data": app.financial_data,
+        "loan_request": app.loan_request,
+        "credit_bureau_data": app.credit_bureau_data,
+        "meta": app.meta,
+        "status": app.status,
+    }
+
+    diff = _diff_dict(old, new)
+    audit = AuditLog(
+        tenant_id=app.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=app.id,
+        action="update",
+        old_value=old,
+        new_value=new,
+        change_summary=f"application updated: {', '.join(sorted(diff.keys()))}" if diff else "application update (no-op)",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(app)
+    return app
+
+
+async def cancel_application(
+    session: AsyncSession,
+    *,
+    app: Application,
+) -> Application:
+    if app.status != "pending":
+        raise ValueError("Only pending applications can be cancelled")
+
+    old_status = app.status
+    app.status = "cancelled"
+    await session.flush()
+
+    audit = AuditLog(
+        tenant_id=app.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=app.id,
+        action="cancel",
+        old_value={"status": old_status},
+        new_value={"status": app.status},
+        change_summary="application cancelled",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(app)
+    return app

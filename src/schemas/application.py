@@ -65,6 +65,20 @@ class ApplicationCreate(BaseModel):
         return self
 
 
+class ApplicationUpdate(BaseModel):
+    # Phase 2.1.3: PATCH /applications/{id}
+    # For v1 (pre-auth), we require tenant_id via query param and keep the update
+    # surface intentionally small.
+    external_id: str | None = None
+    applicant_data: dict[str, Any] | None = None
+    financial_data: dict[str, Any] | None = None
+    loan_request: dict[str, Any] | None = None
+    credit_bureau_data: dict[str, Any] | None = None
+
+    # Status transition (limited v1): pending -> cancelled
+    status: str | None = None
+
+
 class ApplicationListItem(BaseModel):
     id: UUID
     tenant_id: UUID
