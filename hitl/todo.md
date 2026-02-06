@@ -432,7 +432,7 @@ Tasks:
 - [x] Set initial status = ‘pending’
 - [x] Generate external_id if not provided
 - [x] Set expires_at (default: 30 days)
-- [ ] Emit Celery task: score_application
+- [x] Emit Celery task: score_application (best-effort hook via CELERY_ENABLED=1 + CELERY_BROKER_URL)
 - [x] Create audit log entry
 - [x] Return 201 with application ID
 - [x] Test: Valid application created
