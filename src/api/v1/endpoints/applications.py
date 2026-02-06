@@ -32,8 +32,7 @@ async def create_application_endpoint(
 ) -> ApplicationRead:
     app = await create_application(session=session, obj_in=payload)
 
-    # TODO-2.1.1: Emit Celery task score_application(app.id)
-    # This is a best-effort fire-and-forget hook; it is a no-op unless Celery is enabled.
+    # Best-effort fire-and-forget hook; it is a no-op unless Celery is enabled.
     emit_score_application_task(app.id)
 
     return ApplicationRead.model_validate(app)
