@@ -468,7 +468,7 @@ Tasks:
 - [x] Return paginated response with total count
 - [x] Test: Filters work correctly
 - [x] Test: Pagination returns correct pages
-- [ ] Test: Response time < 100ms for 10k records
+- [x] Test: Response time < 100ms for 10k records
 
 Definition of Done:
 - Listing endpoint complete with all filters
