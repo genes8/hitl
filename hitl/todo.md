@@ -486,7 +486,7 @@ Tasks:
 - [x] Create GET /applications/{id} endpoint
 - [x] Include scoring_result (if exists)
 - [x] Include queue_info (if in queue)
-- [ ] Include decision_history (all decisions)
+- [x] Include decision_history (all decisions)
 - [ ] Include similar_cases (if available)
 - [ ] Create PATCH /applications/{id} endpoint
 - [ ] Validate status transitions:
