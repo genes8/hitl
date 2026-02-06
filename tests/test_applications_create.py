@@ -2,6 +2,7 @@ import os
 import uuid
 
 import psycopg
+import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
@@ -61,18 +62,18 @@ def test_create_application_201_and_derives_ratios():
     assert derived["payment_to_income"] == 0.3
 
 
-def test_create_application_emits_score_task(monkeypatch):
+def test_create_application_emits_score_task_best_effort(monkeypatch: pytest.MonkeyPatch):
     tenant_id = _create_tenant()
+
+    # Patch the imported symbol in the endpoint module (not the tasks module).
+    from src.api.v1.endpoints import applications as applications_endpoint
 
     called: dict[str, str] = {}
 
     def _fake_emit(application_id: uuid.UUID) -> None:
         called["application_id"] = str(application_id)
 
-    monkeypatch.setattr(
-        "src.api.v1.endpoints.applications.emit_score_application_task",
-        _fake_emit,
-    )
+    monkeypatch.setattr(applications_endpoint, "emit_score_application_task", _fake_emit)
 
     client = TestClient(app)
 
@@ -96,8 +97,8 @@ def test_create_application_emits_score_task(monkeypatch):
     r = client.post("/api/v1/applications", json=payload)
     assert r.status_code == 201, r.text
 
-    data = r.json()
-    assert called["application_id"] == data["id"]
+    app_id = r.json()["id"]
+    assert called["application_id"] == app_id
 
 
 def test_create_application_422_when_missing_required_fields():
