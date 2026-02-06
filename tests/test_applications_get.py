@@ -165,6 +165,8 @@ def test_get_application_includes_scoring_result_when_exists():
     assert scoring["application_id"] == str(app_id)
     assert scoring["score"] == 720
     assert scoring["risk_category"] == "low"
+    assert scoring["features"]["dti_ratio"] == 0.3
+    assert scoring["shap_values"]["dti_ratio"] == 0.01
 
 
 def test_get_application_includes_similar_cases_when_exists():

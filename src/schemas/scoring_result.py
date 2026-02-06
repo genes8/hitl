@@ -19,6 +19,12 @@ class ScoringResultRead(BaseModel):
     risk_category: str
     routing_decision: str
 
+    threshold_config_id: UUID | None = None
+
+    # Raw model inputs/outputs (useful for debugging + explainability UIs).
+    features: dict[str, Any] | None = None
+    shap_values: dict[str, Any] | None = None
+
     top_factors: dict[str, Any]
 
     scoring_time_ms: int
