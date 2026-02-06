@@ -13,6 +13,7 @@
 - API: add request ID middleware (X-Request-ID passthrough / generation) + lightweight access logging for easier tracing.
 - API: add global exception handlers (HTTPException/validation/unhandled 500) returning consistent error JSON with request_id.
 - DB: add tests for Postgres functions (calculate_queue_priority / get_active_threshold / sync_application_status) and for key schema constraints.
+- DB: add indexes for applications listing/search and for scoring_results latest-by-created_at lookups.
 
 - DB/CI: added pytest smoke-test to verify Alembic migrations are reversible (upgrade -> downgrade -> upgrade).
 - Docker: backend image now installs psycopg[binary] so Alembic can run against Postgres in-container.
