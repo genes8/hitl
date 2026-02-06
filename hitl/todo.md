@@ -532,13 +532,13 @@ Tasks:
   - [ ] Set SLA deadline (default: 8 hours from creation)
   - [ ] Store score_at_routing
   - [ ] Store routing_reason
-- [ ] Create GET endpoint
-- [ ] Query parameters:
-  - [ ] status: pending | assigned | in_progress
-  - [ ] analyst_id: UUID
-  - [ ] priority_max: int
-  - [ ] sort_by: priority | created_at | sla_deadline
-- [ ] Create GET /queue/summary endpoint: { "total_pending": 45,"total_assigned": 8, "total_in_progress": 12, "approaching_sla": 8, "breached_sla": 2, "by_priority": {"high": 10, "medium": 30, "low": 5} }
+- [x] Create GET endpoint
+- [x] Query parameters:
+  - [x] status: pending | assigned | in_progress
+  - [x] analyst_id: UUID
+  - [x] priority_max: int
+  - [x] sort_by: priority | created_at | sla_deadline
+- [x] Create GET /queue/summary endpoint: { "total_pending": 45,"total_assigned": 8, "total_in_progress": 12, "approaching_sla": 8, "breached_sla": 2, "by_priority": {"high": 10, "medium": 30, "low": 5} }
 - [ ] Test: Queue entries created correctly
 - [ ] Test: Priority calculated per spec
 - [ ] Test: Summary returns correct counts

@@ -31,3 +31,16 @@ class AnalystQueueRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AnalystQueueListResponse(BaseModel):
+    items: list[AnalystQueueRead]
+
+
+class AnalystQueueSummaryResponse(BaseModel):
+    total_pending: int
+    total_assigned: int
+    total_in_progress: int
+    approaching_sla: int
+    breached_sla: int
+    by_priority: dict[str, int]

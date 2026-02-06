@@ -10,3 +10,6 @@
   - Alembic migrations (tables, triggers, DB functions, views, indexes)
   - Docker compose setup
   - Integration test suite (CI-only; not run locally)
+- Phase 2 (partial): Queue listing + summary endpoints:
+  - `GET /api/v1/queue` (filters + sorting + pagination)
+  - `GET /api/v1/queue/summary`
