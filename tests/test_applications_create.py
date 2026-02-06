@@ -61,6 +61,45 @@ def test_create_application_201_and_derives_ratios():
     assert derived["payment_to_income"] == 0.3
 
 
+def test_create_application_emits_score_task(monkeypatch):
+    tenant_id = _create_tenant()
+
+    called: dict[str, str] = {}
+
+    def _fake_emit(application_id: uuid.UUID) -> None:
+        called["application_id"] = str(application_id)
+
+    monkeypatch.setattr(
+        "src.api.v1.endpoints.applications.emit_score_application_task",
+        _fake_emit,
+    )
+
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {
+            "loan_amount": 12000,
+            "estimated_payment": 300,
+        },
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    r = client.post("/api/v1/applications", json=payload)
+    assert r.status_code == 201, r.text
+
+    data = r.json()
+    assert called["application_id"] == data["id"]
+
+
 def test_create_application_422_when_missing_required_fields():
     tenant_id = _create_tenant()
 

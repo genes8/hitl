@@ -19,6 +19,7 @@ from src.schemas.application import (
     ApplicationRead,
 )
 from src.schemas.scoring_result import ScoringResultRead
+from src.tasks.scoring import emit_score_application_task
 
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -32,7 +33,17 @@ async def create_application_endpoint(
     app = await create_application(session=session, obj_in=payload)
 
     # TODO-2.1.1: Emit Celery task score_application(app.id)
-    # Placeholder until Celery wiring lands.
+    # Placeholder emission until Celery wiring lands.
+    try:
+        emit_score_application_task(app.id)
+    except Exception:  # pragma: no cover
+        # Never block intake on async scoring.
+        import logging
+
+        logging.getLogger(__name__).exception(
+            "Failed to emit score_application task (application_id=%s)",
+            app.id,
+        )
 
     return ApplicationRead.model_validate(app)
 
