@@ -82,6 +82,7 @@ class ApplicationListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+    next_cursor: str | None = None
 
 
 class ApplicationRead(BaseModel):

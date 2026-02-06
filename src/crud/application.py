@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy import func, select
@@ -80,7 +80,8 @@ async def list_applications(
     sort_order: str = "desc",
     page: int = 1,
     page_size: int = 20,
-) -> tuple[list[Application], int]:
+    cursor: tuple[datetime, UUID] | None = None,
+) -> tuple[list[Application], int, str | None]:
     # Phase 2.1.2 (minimal): listing + status filter + simple pagination.
     # Tenant id is required until auth/tenant-context middleware lands.
     if page < 1:
@@ -147,14 +148,45 @@ async def list_applications(
         order_expr = Application.created_at
 
     if sort_order == "asc":
-        order_expr = sa.nulls_last(order_expr.asc())
+        primary = sa.nulls_last(order_expr.asc())
+        secondary = Application.id.asc()
     else:
-        order_expr = sa.nulls_last(order_expr.desc())
+        primary = sa.nulls_last(order_expr.desc())
+        secondary = Application.id.desc()
 
-    q = base.order_by(order_expr).offset((page - 1) * page_size).limit(page_size)
+    # Cursor pagination (v0): only supported for created_at ordering.
+    next_cursor: str | None = None
+    if cursor is not None:
+        cursor_dt, cursor_id = cursor
+        if cursor_dt.tzinfo is None:
+            cursor_dt = cursor_dt.replace(tzinfo=timezone.utc)
+        if sort_by != "created_at":
+            raise ValueError("cursor pagination only supported for sort_by=created_at")
+
+        if sort_order == "asc":
+            base = base.where(
+                (Application.created_at > cursor_dt)
+                | ((Application.created_at == cursor_dt) & (Application.id > cursor_id))
+            )
+        else:
+            base = base.where(
+                (Application.created_at < cursor_dt)
+                | ((Application.created_at == cursor_dt) & (Application.id < cursor_id))
+            )
+
+        q = base.order_by(primary, secondary).limit(page_size)
+        items = (await session.execute(q)).scalars().all()
+
+        if len(items) == page_size:
+            last = items[-1]
+            next_cursor = f"{last.created_at.isoformat()}|{last.id}"
+
+        return items, total, next_cursor
+
+    q = base.order_by(primary, secondary).offset((page - 1) * page_size).limit(page_size)
     items = (await session.execute(q)).scalars().all()
 
-    return items, total
+    return items, total, next_cursor
 
 
 async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -> Application:

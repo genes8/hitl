@@ -48,6 +48,7 @@ async def list_applications_endpoint(
     sort_order: str = Query("desc", description="Sort order: asc | desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    cursor: str | None = Query(None, description="Cursor for pagination: <created_at_iso>|<id>"),
     session: AsyncSession = Depends(get_db),
 ) -> ApplicationListResponse:
     import uuid
@@ -66,24 +67,41 @@ async def list_applications_endpoint(
     if sort_order not in {"asc", "desc"}:
         raise HTTPException(status_code=422, detail="Invalid sort_order")
 
-    items, total = await list_applications(
-        session=session,
-        tenant_id=tenant_uuid,
-        status=status,
-        from_date=from_date,
-        to_date=to_date,
-        search=search,
-        sort_by=sort_by,
-        sort_order=sort_order,
-        page=page,
-        page_size=page_size,
-    )
+    parsed_cursor = None
+    if cursor is not None:
+        try:
+            import uuid
+
+            created_at_raw, app_id_raw = cursor.split("|", 1)
+            cursor_dt = datetime.fromisoformat(created_at_raw)
+            cursor_id = uuid.UUID(app_id_raw)
+            parsed_cursor = (cursor_dt, cursor_id)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=422, detail="Invalid cursor") from e
+
+    try:
+        items, total, next_cursor = await list_applications(
+            session=session,
+            tenant_id=tenant_uuid,
+            status=status,
+            from_date=from_date,
+            to_date=to_date,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+            cursor=parsed_cursor,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
     return ApplicationListResponse(
         items=[ApplicationListItem.model_validate(i) for i in items],
         total=total,
         page=page,
         page_size=page_size,
+        next_cursor=next_cursor,
     )
 
 
