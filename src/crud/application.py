@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -109,13 +109,20 @@ async def list_applications(
     sort_order: str = "desc",
     page: int = 1,
     page_size: int = 20,
-) -> tuple[list[Application], int]:
-    """Return (items, total). Pagination is page-based."""
+    cursor: str | None = None,
+) -> tuple[list[Application], int, str | None, bool | None]:
+    """Return (items, total, next_cursor, has_more).
+
+    By default pagination is page-based. If `cursor` is provided, cursor-based
+    pagination is used (currently only supported for sort_by=created_at).
+    """
 
     if page < 1:
         raise ValueError("page must be >= 1")
     if page_size < 1 or page_size > 100:
         raise ValueError("page_size must be between 1 and 100")
+
+    use_cursor = cursor is not None
 
     # Base filters
     stmt = select(Application)
@@ -148,6 +155,9 @@ async def list_applications(
     if needs_score_join:
         stmt = stmt.outerjoin(ScoringResult, ScoringResult.application_id == Application.id)
 
+    if use_cursor and sort_by != "created_at":
+        raise ValueError("cursor pagination is only supported for sort_by=created_at")
+
     # Sorting
     if sort_by == "created_at":
         sort_col = Application.created_at
@@ -158,12 +168,20 @@ async def list_applications(
     else:
         raise ValueError("sort_by must be one of: created_at, amount, score")
 
-    if sort_order == "asc":
-        stmt = stmt.order_by(sort_col.asc().nullslast())
-    elif sort_order == "desc":
-        stmt = stmt.order_by(sort_col.desc().nullslast())
-    else:
+    if sort_order not in ("asc", "desc"):
         raise ValueError("sort_order must be one of: asc, desc")
+
+    # Deterministic ordering for created_at sorting (needed for cursor pagination).
+    if sort_by == "created_at":
+        if sort_order == "asc":
+            stmt = stmt.order_by(sort_col.asc(), Application.id.asc())
+        else:
+            stmt = stmt.order_by(sort_col.desc(), Application.id.desc())
+    else:
+        if sort_order == "asc":
+            stmt = stmt.order_by(sort_col.asc().nullslast())
+        else:
+            stmt = stmt.order_by(sort_col.desc().nullslast())
 
     # Total count
     subq = stmt.subquery()
@@ -173,12 +191,49 @@ async def list_applications(
         count_stmt = select(func.count())
 
     count_stmt = count_stmt.select_from(subq)
-    total = (await session.execute(count_stmt)).scalar_one()
+    total = int((await session.execute(count_stmt)).scalar_one())
 
-    # Page
+    next_cursor: str | None = None
+    has_more: bool | None = None
+
+    if use_cursor:
+        # Cursor format: "<created_at_iso>|<uuid>".
+        try:
+            raw_ts, raw_id = cursor.split("|", 1)
+            # Allow Z suffix.
+            dt = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
+            cur_id = UUID(raw_id)
+        except Exception as e:  # pragma: no cover
+            raise ValueError("cursor must be in format '<created_at_iso>|<uuid>'") from e
+
+        if sort_order == "asc":
+            stmt = stmt.where(
+                (Application.created_at > dt)
+                | ((Application.created_at == dt) & (Application.id > cur_id))
+            )
+        else:
+            stmt = stmt.where(
+                (Application.created_at < dt)
+                | ((Application.created_at == dt) & (Application.id < cur_id))
+            )
+
+        # Fetch one extra row so we can report `has_more`.
+        stmt = stmt.limit(page_size + 1)
+        res = await session.execute(stmt)
+        all_items = list(res.scalars().unique().all())
+        has_more = len(all_items) > page_size
+        items = all_items[:page_size]
+
+        if has_more and items:
+            last = items[-1]
+            next_cursor = f"{last.created_at.isoformat()}|{last.id}"
+
+        return items, total, next_cursor, has_more
+
+    # Page-based pagination
     offset = (page - 1) * page_size
     stmt = stmt.offset(offset).limit(page_size)
 
     res = await session.execute(stmt)
     items = list(res.scalars().unique().all())
-    return items, int(total)
+    return items, total, None, None

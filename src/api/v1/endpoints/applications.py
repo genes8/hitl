@@ -25,10 +25,14 @@ async def list_applications_endpoint(
     sort_order: str = Query(default="desc"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
+    cursor: str | None = Query(
+        default=None,
+        description="Cursor token for pagination (supported for sort_by=created_at).",
+    ),
     session: AsyncSession = Depends(get_db),
 ) -> ApplicationListResponse:
     try:
-        items, total = await list_applications(
+        items, total, next_cursor, has_more = await list_applications(
             session,
             tenant_id=tenant_id,
             status=status,
@@ -39,15 +43,20 @@ async def list_applications_endpoint(
             sort_order=sort_order,
             page=page,
             page_size=page_size,
+            cursor=cursor,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
+    # Cursor pagination is optional. Keep `page`/`page_size` in the response for
+    # backwards compatibility with existing clients.
     return ApplicationListResponse(
         items=[ApplicationRead.model_validate(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,
+        next_cursor=next_cursor,
+        has_more=has_more,
     )
 
 

@@ -285,3 +285,85 @@ def test_list_applications_filters_by_date_range_and_sorts_by_score():
     assert items[0]["external_id"] == "EXT-NEW"
     assert items[1]["external_id"] == "EXT-OLD"
     assert items[-1]["external_id"] == "EXT-NOSCORE"
+
+
+def test_list_applications_cursor_pagination_created_at():
+    tenant_id = _create_tenant(name="Tenant Cursor")
+    client = TestClient(app)
+
+    payloads = [
+        {
+            "tenant_id": str(tenant_id),
+            "external_id": "EXT-C1",
+            "applicant_data": {"name": "Cursor One"},
+            "financial_data": {
+                "net_monthly_income": 1000,
+                "monthly_obligations": 200,
+                "existing_loans_payment": 100,
+            },
+            "loan_request": {"loan_amount": 1000, "estimated_payment": 50},
+            "credit_bureau_data": None,
+            "source": "web",
+        },
+        {
+            "tenant_id": str(tenant_id),
+            "external_id": "EXT-C2",
+            "applicant_data": {"name": "Cursor Two"},
+            "financial_data": {
+                "net_monthly_income": 1000,
+                "monthly_obligations": 200,
+                "existing_loans_payment": 100,
+            },
+            "loan_request": {"loan_amount": 1000, "estimated_payment": 50},
+            "credit_bureau_data": None,
+            "source": "web",
+        },
+    ]
+
+    app_ids: list[str] = []
+    for p in payloads:
+        r = client.post("/api/v1/applications", json=p)
+        assert r.status_code == 201, r.text
+        app_ids.append(r.json()["id"])
+
+    # Force same created_at, so ordering relies on id tiebreaker.
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            for app_id in app_ids:
+                cur.execute(
+                    "UPDATE applications SET created_at = %s WHERE id = %s",
+                    ("2026-02-01T00:00:00+00:00", app_id),
+                )
+        conn.commit()
+
+    r_first = client.get(
+        "/api/v1/applications",
+        params={
+            "tenant_id": str(tenant_id),
+            "sort_by": "created_at",
+            "sort_order": "asc",
+            "page_size": 1,
+        },
+    )
+    assert r_first.status_code == 200, r_first.text
+    data_first = r_first.json()
+    assert len(data_first["items"]) == 1
+
+    # Cursor fields are optional but should be present when more pages exist.
+    assert data_first["has_more"] is True
+    assert isinstance(data_first["next_cursor"], str)
+
+    r_second = client.get(
+        "/api/v1/applications",
+        params={
+            "tenant_id": str(tenant_id),
+            "sort_by": "created_at",
+            "sort_order": "asc",
+            "page_size": 1,
+            "cursor": data_first["next_cursor"],
+        },
+    )
+    assert r_second.status_code == 200, r_second.text
+    data_second = r_second.json()
+    assert len(data_second["items"]) == 1
+    assert data_second["has_more"] is False

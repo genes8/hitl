@@ -90,3 +90,9 @@ class ApplicationListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+    # Optional cursor pagination support (TODO-2.1.2).
+    # When `cursor` is provided in the request, `next_cursor` can be used to
+    # fetch the next page. `has_more` indicates whether more items exist.
+    next_cursor: str | None = None
+    has_more: bool | None = None
