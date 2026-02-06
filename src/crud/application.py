@@ -254,3 +254,37 @@ async def create_application(session: AsyncSession, obj_in: ApplicationCreate) -
     await session.commit()
     await session.refresh(app)
     return app
+
+
+async def cancel_application(
+    session: AsyncSession,
+    *,
+    application: Application,
+) -> Application:
+    """Cancel (soft-delete) an application.
+
+    Spec (hitl/todo.md TODO-2.1.3): DELETE /applications/{id} sets status = cancelled.
+
+    This operation is intended to be idempotent at the API layer (endpoint can
+    treat already-cancelled as success). Here we just perform the state change
+    and write an audit log entry.
+    """
+
+    old_status = application.status
+    application.status = "cancelled"
+
+    audit = AuditLog(
+        tenant_id=application.tenant_id,
+        user_id=None,
+        entity_type="application",
+        entity_id=application.id,
+        action="cancel",
+        old_value={"status": old_status},
+        new_value={"status": "cancelled"},
+        change_summary="application cancelled",
+    )
+    session.add(audit)
+
+    await session.commit()
+    await session.refresh(application)
+    return application

@@ -499,10 +499,10 @@ Tasks:
   - [ ] review -> declined ✓
   - [ ] [others blocked]
 - [ ] Only allow field updates on pending applications
-- [ ] Create DELETE /applications/{id} endpoint (sets status = cancelled)
+- [x] Create DELETE /applications/{id} endpoint (sets status = cancelled)
 - [ ] Test: Detail includes all related data
 - [ ] Test: Invalid transitions blocked
-- [ ] Test: Cancel works
+- [x] Test: Cancel works
 
 Definition of Done:
 - Detail and update endpoints complete

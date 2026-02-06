@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.application import (
+    cancel_application,
     create_application,
     get_application,
     get_latest_queue_entry,
@@ -152,3 +153,46 @@ async def get_application_endpoint(
     payload["similar_cases"] = [SimilarCaseRead.model_validate(sc).model_dump() for sc in similar_cases]
 
     return ApplicationRead(**payload)
+
+
+@router.delete("/{application_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def cancel_application_endpoint(
+    application_id: str,
+    tenant_id: str = Query(..., description="Tenant UUID"),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    """Cancel (soft-delete) an application.
+
+    TODO-2.1.3: DELETE /applications/{id} endpoint (sets status = cancelled).
+
+    Until auth/tenant-context middleware lands, tenant_id is required.
+    """
+
+    import uuid
+
+    try:
+        app_id = uuid.UUID(application_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    try:
+        tenant_uuid = uuid.UUID(tenant_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid tenant_id")
+
+    app = await get_application(session=session, application_id=app_id, tenant_id=tenant_uuid)
+    if app is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if app.status == "cancelled":
+        # Idempotent cancellation.
+        return None
+
+    if app.status != "pending":
+        raise HTTPException(
+            status_code=409,
+            detail="Only pending applications can be cancelled",
+        )
+
+    await cancel_application(session=session, application=app)
+    return None
