@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 import psycopg
 from fastapi.testclient import TestClient
@@ -71,7 +72,8 @@ def test_list_applications_filters_by_from_date_and_to_date():
             )
         conn.commit()
 
-    from_date = (now - timedelta(days=2)).isoformat()
+    # NOTE: isoformat() includes "+00:00" which must be URL-encoded; otherwise "+" becomes a space.
+    from_date = quote((now - timedelta(days=2)).isoformat())
 
     r = client.get(f"/api/v1/applications?tenant_id={tenant_id}&from_date={from_date}")
     assert r.status_code == 200, r.text
@@ -81,7 +83,7 @@ def test_list_applications_filters_by_from_date_and_to_date():
     assert len(data["items"]) == 1
     assert data["items"][0]["id"] == newer_id
 
-    to_date = (now - timedelta(days=5)).isoformat()
+    to_date = quote((now - timedelta(days=5)).isoformat())
     r2 = client.get(f"/api/v1/applications?tenant_id={tenant_id}&to_date={to_date}")
     assert r2.status_code == 200, r2.text
 

@@ -29,11 +29,38 @@ services:
       DATABASE_URL: postgresql+asyncpg://hitl:${POSTGRES_PASSWORD:-hitl_dev_password}@postgres/hitl_credit
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      # Optional async scoring via Celery. Disabled by default.
+      CELERY_ENABLED: ${CELERY_ENABLED:-0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      CELERY_TASK_SCORE_APPLICATION_NAME: ${CELERY_TASK_SCORE_APPLICATION_NAME:-score_application}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    command: ["celery", "-A", "src.worker", "worker", "--loglevel=INFO"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    command: ["celery", "-A", "src.worker", "beat", "--loglevel=INFO"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
       redis:
         condition: service_started
 

@@ -38,21 +38,21 @@ def test_calculate_queue_priority_matches_expected_rules():
     with psycopg.connect(_sync_dsn()) as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT calculate_queue_priority(%s, %s, %s, %s)",
+                "SELECT calculate_queue_priority(%s::int, %s::numeric, %s::boolean, %s::numeric)",
                 (700, 1000, True, 24),
             )
             assert cur.fetchone()[0] == 10
 
             # amount > 5,000,000 subtracts 15 from baseline 50
             cur.execute(
-                "SELECT calculate_queue_priority(%s, %s, %s, %s)",
+                "SELECT calculate_queue_priority(%s::int, %s::numeric, %s::boolean, %s::numeric)",
                 (700, 5_000_001, False, 24),
             )
             assert cur.fetchone()[0] == 35
 
             # sla_hours_remaining < 2 subtracts 20
             cur.execute(
-                "SELECT calculate_queue_priority(%s, %s, %s, %s)",
+                "SELECT calculate_queue_priority(%s::int, %s::numeric, %s::boolean, %s::numeric)",
                 (700, 1000, False, 1.9),
             )
             assert cur.fetchone()[0] == 30

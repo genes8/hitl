@@ -2,6 +2,7 @@ import os
 import uuid
 
 import psycopg
+from psycopg.types.json import Json
 from fastapi.testclient import TestClient
 
 from src.main import app
@@ -58,9 +59,9 @@ def _insert_scoring_result(*, application_id: uuid.UUID) -> uuid.UUID:
                     "low",
                     "auto_approve",
                     None,
-                    {"dti_ratio": 0.3},
-                    {"dti_ratio": 0.01},
-                    {"top": ["dti_ratio"]},
+                    Json({"dti_ratio": 0.3}),
+                    Json({"dti_ratio": 0.01}),
+                    Json({"top": ["dti_ratio"]}),
                     42,
                 ),
             )
