@@ -464,7 +464,7 @@ Tasks:
   - [x] page: int (default 1)
   - [x] page_size: int (default 20, max 100)
 - [x] Implement cursor pagination option
-- [ ] Optimize query with proper indexes
+- [x] Optimize query with proper indexes
 - [x] Return paginated response with total count
 - [x] Test: Filters work correctly
 - [x] Test: Pagination returns correct pages

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- DB: add composite indexes to speed up GET /api/v1/applications (tenant_id + created_at, tenant_id + external_id).
 - API: enqueue Celery scoring task (hitl.score_application) after application intake (+ test);
   best-effort so application creation still returns 201 if enqueue fails.
 - API: add cursor pagination option to GET /api/v1/applications (created_at sort) (+ tests).
