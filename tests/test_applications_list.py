@@ -1,28 +1,7 @@
-import os
 import uuid
 
 import psycopg
 from fastapi.testclient import TestClient
-
-from src.main import app
-
-
-def _sync_dsn() -> str:
-    dsn = os.environ.get("DATABASE_URL")
-    assert dsn, "DATABASE_URL must be set in CI"
-    return dsn.replace("postgresql+asyncpg://", "postgresql://")
-
-
-def _create_tenant() -> uuid.UUID:
-    tenant_id = uuid.uuid4()
-    with psycopg.connect(_sync_dsn()) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "INSERT INTO tenants (id, name, slug) VALUES (%s, %s, %s)",
-                (tenant_id, "Test Tenant", f"test-{tenant_id.hex[:8]}"),
-            )
-        conn.commit()
-    return tenant_id
 
 
 def _create_application(client: TestClient, *, tenant_id: uuid.UUID, applicant_name: str) -> str:
@@ -48,9 +27,7 @@ def _create_application(client: TestClient, *, tenant_id: uuid.UUID, applicant_n
     return r.json()["id"]
 
 
-def test_list_applications_returns_items_and_total():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_returns_items_and_total(client: TestClient, tenant_id: uuid.UUID):
 
     _create_application(client, tenant_id=tenant_id, applicant_name="A")
     _create_application(client, tenant_id=tenant_id, applicant_name="B")
@@ -70,9 +47,7 @@ def test_list_applications_returns_items_and_total():
         assert "submitted_at" in item
 
 
-def test_list_applications_paginates():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_paginates(client: TestClient, tenant_id: uuid.UUID):
 
     _create_application(client, tenant_id=tenant_id, applicant_name="A")
     _create_application(client, tenant_id=tenant_id, applicant_name="B")
@@ -90,15 +65,13 @@ def test_list_applications_paginates():
     assert len(d2["items"]) == 1
 
 
-def test_list_applications_filters_by_status():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_filters_by_status(client: TestClient, tenant_id: uuid.UUID, sync_dsn: str):
 
     a1 = _create_application(client, tenant_id=tenant_id, applicant_name="A")
     _create_application(client, tenant_id=tenant_id, applicant_name="B")
 
     # Manually update one row to simulate a different lifecycle status.
-    with psycopg.connect(_sync_dsn()) as conn:
+    with psycopg.connect(sync_dsn) as conn:
         with conn.cursor() as cur:
             cur.execute("UPDATE applications SET status = %s WHERE id = %s", ("scoring", a1))
         conn.commit()
@@ -112,14 +85,14 @@ def test_list_applications_filters_by_status():
     assert data["items"][0]["status"] == "scoring"
 
 
-def test_list_applications_searches_by_applicant_name_and_external_id():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_searches_by_applicant_name_and_external_id(
+    client: TestClient, tenant_id: uuid.UUID, sync_dsn: str
+):
 
     created_id = _create_application(client, tenant_id=tenant_id, applicant_name="Marko")
 
     # external_id is auto-generated; fetch it directly for a deterministic search.
-    with psycopg.connect(_sync_dsn()) as conn:
+    with psycopg.connect(sync_dsn) as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT external_id FROM applications WHERE id=%s", (created_id,))
             external_id = cur.fetchone()[0]
@@ -134,9 +107,7 @@ def test_list_applications_searches_by_applicant_name_and_external_id():
     assert r2.json()["total"] == 1
 
 
-def test_list_applications_sorts_by_amount():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_sorts_by_amount(client: TestClient, tenant_id: uuid.UUID):
 
     # Create two apps with different loan_amount.
     payload_low = {
@@ -177,15 +148,15 @@ def test_list_applications_sorts_by_amount():
     assert ids == [low_id, high_id]
 
 
-def test_list_applications_sorts_by_submitted_at():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_sorts_by_submitted_at(
+    client: TestClient, tenant_id: uuid.UUID, sync_dsn: str
+):
 
     a1 = _create_application(client, tenant_id=tenant_id, applicant_name="First")
     a2 = _create_application(client, tenant_id=tenant_id, applicant_name="Second")
 
     # Force deterministic ordering regardless of how fast the rows were created.
-    with psycopg.connect(_sync_dsn()) as conn:
+    with psycopg.connect(sync_dsn) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE applications SET submitted_at = %s WHERE id = %s",
@@ -206,15 +177,15 @@ def test_list_applications_sorts_by_submitted_at():
     assert ids[:2] == [a1, a2]
 
 
-def test_list_applications_sorts_by_score_desc_with_nulls_last():
-    tenant_id = _create_tenant()
-    client = TestClient(app)
+def test_list_applications_sorts_by_score_desc_with_nulls_last(
+    client: TestClient, tenant_id: uuid.UUID, sync_dsn: str
+):
 
     a_low = _create_application(client, tenant_id=tenant_id, applicant_name="LowScore")
     a_high = _create_application(client, tenant_id=tenant_id, applicant_name="HighScore")
     a_none = _create_application(client, tenant_id=tenant_id, applicant_name="NoScore")
 
-    with psycopg.connect(_sync_dsn()) as conn:
+    with psycopg.connect(sync_dsn) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """

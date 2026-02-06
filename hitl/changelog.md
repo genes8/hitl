@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Tests: add pytest `conftest.py` with shared fixtures (client, tenant_id, sync_dsn) to reduce duplication.
 - API: add generic BaseCRUD scaffold (async SQLAlchemy) for upcoming tenant-aware CRUD modules.
 - API: add cursor pagination option to GET /api/v1/applications (keyset pagination for created_at/submitted_at ordering).
 - API: when using cursor pagination with sort_by=submitted_at, exclude rows with NULL submitted_at to keep keyset semantics stable.

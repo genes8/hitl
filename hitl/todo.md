@@ -152,7 +152,7 @@ Tasks:
 - [x] Create global exception handlers (400, 401, 403, 404, 500)
 - [x] Create request ID middleware
 - [x] Configure OpenAPI documentation (/docs, /redoc) (FastAPI defaults)
-- [ ] Write pytest configuration (conftest.py)
+- [x] Write pytest configuration (conftest.py)
 - [x] Write first test: test_health_check
 - [x] Test: Server starts without errors (CI)
 - [x] Test: /health returns 200
