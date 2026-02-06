@@ -738,7 +738,7 @@ Estimated Hours: 16
 Can be parallelized: No (requires ML Service)
 
 Tasks:
-- [ ] Create task: score_application(application_id)
+- [x] Create task: score_application(application_id) (stub in src/worker.py)
 - [ ] Fetch application data
 - [ ] Extract features for scoring
 - [ ] Call ML service: POST /score
