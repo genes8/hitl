@@ -20,6 +20,10 @@
 - API: added GET /api/v1/applications/{id} (detail) with optional tenant scoping via `tenant_id` query param; includes latest scoring_result when present.
 - API: validate POST /api/v1/applications required fields (applicant_data/financial_data/loan_request) + tests.
 
+- API (Phase 2 partial): Queue listing + summary endpoints:
+  - `GET /api/v1/queue` (filters + sorting + pagination)
+  - `GET /api/v1/queue/summary` (SQL aggregation for SLA metrics + priority buckets)
+
 - DB: added sync_application_status() and analytics views (v_daily_decision_summary, v_analyst_performance, v_queue_metrics).
 
 - DB: added DB functions calculate_queue_priority() and get_active_threshold().
