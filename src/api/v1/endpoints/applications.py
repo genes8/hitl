@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.application import (
     create_application,
     get_application,
+    get_latest_queue_entry,
     get_latest_scoring_result,
     list_applications,
 )
@@ -18,6 +19,7 @@ from src.schemas.application import (
     ApplicationListResponse,
     ApplicationRead,
 )
+from src.schemas.analyst_queue import AnalystQueueRead
 from src.schemas.scoring_result import ScoringResultRead
 
 
@@ -113,8 +115,10 @@ async def get_application_endpoint(
         raise HTTPException(status_code=404, detail="Application not found")
 
     scoring = await get_latest_scoring_result(session=session, application_id=app.id)
+    queue_entry = await get_latest_queue_entry(session=session, application_id=app.id)
 
     payload = ApplicationRead.model_validate(app).model_dump()
     payload["scoring_result"] = ScoringResultRead.model_validate(scoring).model_dump() if scoring else None
+    payload["queue_info"] = AnalystQueueRead.model_validate(queue_entry).model_dump() if queue_entry else None
 
     return ApplicationRead(**payload)

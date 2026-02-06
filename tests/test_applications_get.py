@@ -68,6 +68,25 @@ def _insert_scoring_result(*, application_id: uuid.UUID) -> uuid.UUID:
     return scoring_id
 
 
+def _insert_queue_entry(*, application_id: uuid.UUID) -> uuid.UUID:
+    queue_id = uuid.uuid4()
+    with psycopg.connect(_sync_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO analyst_queues (
+                  id,
+                  application_id,
+                  sla_deadline
+                )
+                VALUES (%s,%s, now() + interval '8 hours')
+                """,
+                (queue_id, application_id),
+            )
+        conn.commit()
+    return queue_id
+
+
 def test_get_application_200_after_create():
     tenant_id = _create_tenant()
     client = TestClient(app)
@@ -96,6 +115,7 @@ def test_get_application_200_after_create():
     assert r.json()["id"] == app_id
     assert r.json()["tenant_id"] == str(tenant_id)
     assert r.json()["scoring_result"] is None
+    assert r.json()["queue_info"] is None
 
 
 def test_get_application_includes_scoring_result_when_exists():
@@ -121,6 +141,7 @@ def test_get_application_includes_scoring_result_when_exists():
 
     app_id = uuid.UUID(created.json()["id"])
     scoring_id = _insert_scoring_result(application_id=app_id)
+    queue_id = _insert_queue_entry(application_id=app_id)
 
     r = client.get(f"/api/v1/applications/{app_id}")
     assert r.status_code == 200, r.text
@@ -131,6 +152,12 @@ def test_get_application_includes_scoring_result_when_exists():
     assert scoring["application_id"] == str(app_id)
     assert scoring["score"] == 720
     assert scoring["risk_category"] == "low"
+
+    queue_info = r.json()["queue_info"]
+    assert queue_info is not None
+    assert queue_info["id"] == str(queue_id)
+    assert queue_info["application_id"] == str(app_id)
+    assert queue_info["status"] == "pending"
 
 
 def test_get_application_404_when_unknown_uuid():
