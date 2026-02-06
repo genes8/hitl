@@ -2,6 +2,7 @@ import os
 import uuid
 
 import psycopg
+import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
@@ -59,6 +60,45 @@ def test_create_application_201_and_derives_ratios():
     assert derived["dti_ratio"] == 0.3
     assert derived["loan_to_income"] == 1.0
     assert derived["payment_to_income"] == 0.3
+
+
+def test_create_application_emits_score_task_best_effort(monkeypatch: pytest.MonkeyPatch):
+    tenant_id = _create_tenant()
+
+    # Patch the imported symbol in the endpoint module (not the tasks module).
+    from src.api.v1.endpoints import applications as applications_endpoint
+
+    called: dict[str, str] = {}
+
+    def _fake_emit(application_id: uuid.UUID) -> None:
+        called["application_id"] = str(application_id)
+
+    monkeypatch.setattr(applications_endpoint, "emit_score_application_task", _fake_emit)
+
+    client = TestClient(app)
+
+    payload = {
+        "tenant_id": str(tenant_id),
+        "external_id": None,
+        "applicant_data": {"name": "Jane"},
+        "financial_data": {
+            "net_monthly_income": 1000,
+            "monthly_obligations": 200,
+            "existing_loans_payment": 100,
+        },
+        "loan_request": {
+            "loan_amount": 12000,
+            "estimated_payment": 300,
+        },
+        "credit_bureau_data": None,
+        "source": "web",
+    }
+
+    r = client.post("/api/v1/applications", json=payload)
+    assert r.status_code == 201, r.text
+
+    app_id = r.json()["id"]
+    assert called["application_id"] == app_id
 
 
 def test_create_application_422_when_missing_required_fields():

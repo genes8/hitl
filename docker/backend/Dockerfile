@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -U pip \
     asyncpg==0.29.* \
     psycopg[binary]==3.1.* \
     alembic==1.13.* \
+    celery[redis]==5.3.* \
     pytest==8.* \
     httpx==0.27.*
 
